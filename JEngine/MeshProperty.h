@@ -37,6 +37,7 @@ struct StaticMeshInfo
 	std::vector<FVector> Vertices;
 	std::vector<uint32_t> Indices;
 	std::vector<FColor> ColorVertices;
+	std::vector<glm::vec2> UV;
 };
 
 struct ActorStruct {

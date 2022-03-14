@@ -11,13 +11,12 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
-
-
 struct Vertex
 {
 	glm::vec3 Pos;
 	XMFLOAT4 Color;
 	glm::vec3 Normal;
+	glm::vec2 TexC;
 };
 struct MeshData
 {
@@ -49,20 +48,25 @@ public:
 	void DrawPrepare() override;
 
 private:
-
+	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
 	void BulidDescriptorHeaps(int index);
 	void BulidConstantBuffers(int index);
+	void BuildShaderResourceView();
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
 	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);
 	void BuildStaticMeshData(StaticMeshInfo* myStruct);
 	void BuildPSO();
+	void LoadTexture();
 
 private:
 	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
 	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvHeap ;
+	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 	std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
+
+	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;

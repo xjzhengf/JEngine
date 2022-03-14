@@ -63,6 +63,11 @@ void AssetManager::ReadBinaryFileToStaticMeshStruct(const char* TextPath)
 		inFile.read((char*)&ColorVerticesLen, sizeof(int32_t));
 		meshAsset->ColorVertices.resize(ColorVerticesLen);
 		inFile.read((char*)meshAsset->ColorVertices.data(), ColorVerticesLen * sizeof(FColor));
+
+		int uvLen = 0;
+		inFile.read((char*)&uvLen, sizeof(int32_t));
+		meshAsset->UV.resize(uvLen);
+		inFile.read((char*)meshAsset->UV.data(), uvLen * sizeof(glm::vec2));
 	}
 	inFile.close();
 	this->MeshAsset.insert({ meshAsset->StaticMeshName,meshAsset });
