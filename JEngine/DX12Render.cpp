@@ -55,7 +55,9 @@ void DX12Render::Draw(const GameTimer& gt)
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
 	Time = gt.TotalTime();
+
 	int i = 0;
+
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
@@ -89,8 +91,10 @@ void DX12Render::Draw(const GameTimer& gt)
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
 		mObjectCB[i]->CopyData(0, objConstants);
 
-		ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvHeap[i].Get() };
+
+		ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[i].Get() };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
 
 		mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
 
@@ -98,7 +102,7 @@ void DX12Render::Draw(const GameTimer& gt)
 		mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap[i]->GetGPUDescriptorHandleForHeapStart());
+		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
 		mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(i)].IndexCount, 1,
 			(UINT)mBoxGeo->DrawArgs[std::to_string(i)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(i)].BaseVertexLocation, 0);
 		i++;
@@ -125,7 +129,7 @@ void DX12Render::DrawPrepare()
 
 	BulidRootSignature();
 	BulidShadersAndInputLayout();
-	mCbvHeap.resize(SceneSize);
+	mCbvSrvHeap.resize(SceneSize);
 	mObjectCB.resize(SceneSize);
 	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
@@ -133,9 +137,10 @@ void DX12Render::DrawPrepare()
 		BuildStaticMeshData(MeshInfo);
 		BulidDescriptorHeaps(i);
 		BulidConstantBuffers(i);
+		BuildShaderResourceView(i);
 		i++;
 	}
-	BuildShaderResourceView();
+
 	BuildStaticMeshGeometry(meshDataVector);
 	BuildPSO();
 	ThrowIfFailed(mCommandList->Close());
@@ -203,11 +208,11 @@ std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> DX12Render::GetStaticSamplers()
 void DX12Render::BulidDescriptorHeaps(int index)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.NumDescriptors = 2;
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvHeap[index])));
+	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[index])));
 }
 
 void DX12Render::BulidConstantBuffers(int index)
@@ -221,19 +226,17 @@ void DX12Render::BulidConstantBuffers(int index)
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 	cbvDesc.BufferLocation = cbAddress;
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvHeap[index]->GetCPUDescriptorHandleForHeapStart());
+	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
+
+
 
 }
 
-void DX12Render::BuildShaderResourceView()
+void DX12Render::BuildShaderResourceView(int index)
 {
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
-	//获取偏移
-	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		//获取偏移
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
+	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	auto woodCrateTex = mTextures["ZLStaticMesh"]->Resource;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -244,6 +247,7 @@ void DX12Render::BuildShaderResourceView()
 	srvDesc.Texture2D.MipLevels = woodCrateTex->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	md3dDevice->CreateShaderResourceView(woodCrateTex.Get(), &srvDesc, hDescriptor);
+	
 }
 
 

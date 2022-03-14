@@ -51,7 +51,7 @@ private:
 	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
 	void BulidDescriptorHeaps(int index);
 	void BulidConstantBuffers(int index);
-	void BuildShaderResourceView();
+	void BuildShaderResourceView(int index);
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
 	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);
@@ -61,7 +61,7 @@ private:
 
 private:
 	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
-	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvHeap ;
+	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 	std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
