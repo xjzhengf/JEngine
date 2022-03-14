@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "StaticMeshActor_3",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": -0.32650187611579895,
+				"y": -0.62721419334411621,
+				"z": 0.62721174955368042,
+				"w": 0.32650306820869446
+			},
+			"translation":
+			{
+				"x": -945,
+				"y": 590,
+				"z": 595
+			},
+			"scale3D":
+			{
+				"x": 1,
+				"y": 1,
+				"z": 1
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"ZLStaticMesh"
+	]
+}

@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "StaticMeshActor_1",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 1
+			},
+			"translation":
+			{
+				"x": -1190,
+				"y": -180,
+				"z": 130
+			},
+			"scale3D":
+			{
+				"x": 1,
+				"y": 1,
+				"z": 1
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"GLStaticMesh"
+	]
+}

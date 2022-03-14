@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "LeftArm_StaticMesh",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 1
+			},
+			"translation":
+			{
+				"x": -90,
+				"y": -40,
+				"z": 105
+			},
+			"scale3D":
+			{
+				"x": 1,
+				"y": 1,
+				"z": 1
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"LeftArm_StaticMesh"
+	]
+}

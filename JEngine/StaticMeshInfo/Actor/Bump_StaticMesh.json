@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "Bump_StaticMesh",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 1
+			},
+			"translation":
+			{
+				"x": 169,
+				"y": -40,
+				"z": 94
+			},
+			"scale3D":
+			{
+				"x": 1,
+				"y": 1,
+				"z": 1
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"Bump_StaticMesh"
+	]
+}

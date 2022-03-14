@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "Floor_1",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": -1.3473942090058699e-05,
+				"z": 0,
+				"w": 1
+			},
+			"translation":
+			{
+				"x": -399.75146484375,
+				"y": 0,
+				"z": 130.27708435058594
+			},
+			"scale3D":
+			{
+				"x": 0.75,
+				"y": 0.75,
+				"z": 1
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"TemplateFloor"
+	]
+}
