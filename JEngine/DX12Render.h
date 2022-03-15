@@ -30,6 +30,7 @@ struct ObjectConstants {
 	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
+	glm::mat4x4 TexTransform = glm::identity<glm::mat4x4>();
 	float Time = 0.0f;
 };
 
@@ -51,7 +52,7 @@ private:
 	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
 	void BulidDescriptorHeaps(int index);
 	void BulidConstantBuffers(int index);
-	void BuildShaderResourceView(int index);
+	void BuildShaderResourceView(int index, const std::string& Name);
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
 	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);

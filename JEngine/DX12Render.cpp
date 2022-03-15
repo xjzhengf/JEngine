@@ -17,9 +17,6 @@ bool DX12Render::Initialize()
 
 	if (!D3DInit::Initialize())
 		return false;
-
-
-	LoadTexture();
 	return true;
 }
 
@@ -55,9 +52,12 @@ void DX12Render::Draw(const GameTimer& gt)
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
 	Time = gt.TotalTime();
+	
+
+	glm::vec3 cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
+	
 
 	int i = 0;
-
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
@@ -81,7 +81,6 @@ void DX12Render::Draw(const GameTimer& gt)
 		objConstants.Rotation = glm::mat4_cast(q);
 		objConstants.Translate = glm::translate(objConstants.Translate, location);
 		objConstants.Scale = glm::scale(objConstants.Scale, Scale);
-
 		objConstants.Time = Time;
 		glm::mat4x4 proj = SceneManager::GetSceneManager()->GetCamera()->GetProj4x4();
 		glm::mat4x4 view = SceneManager::GetSceneManager()->GetCamera()->GetView4x4();
@@ -90,23 +89,25 @@ void DX12Render::Draw(const GameTimer& gt)
 		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
 		mObjectCB[i]->CopyData(0, objConstants);
+		
 
-
+		
 		ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[i].Get() };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
+		mCommandList->SetGraphicsRootSignature(mRootSigmature.Get()); 
 
-		mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
+	
 
 		mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
 		mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
 		hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	//	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
 		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
-
+		mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
 		mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(i)].IndexCount, 1,
 			(UINT)mBoxGeo->DrawArgs[std::to_string(i)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(i)].BaseVertexLocation, 0);
 		i++;
@@ -128,11 +129,11 @@ void DX12Render::Draw(const GameTimer& gt)
 
 void DX12Render::DrawPrepare()
 {
+	LoadTexture();
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
-
-	BulidRootSignature();
 	BulidShadersAndInputLayout();
+	BulidRootSignature();
 	mCbvSrvHeap.resize(SceneSize);
 	mObjectCB.resize(SceneSize);
 	int i = 0;
@@ -141,7 +142,7 @@ void DX12Render::DrawPrepare()
 		BuildStaticMeshData(MeshInfo);
 		BulidDescriptorHeaps(i);
 		BulidConstantBuffers(i);
-		BuildShaderResourceView(i);
+		BuildShaderResourceView(i,MeshInfo->StaticMeshName);
 		i++;
 	}
 
@@ -154,60 +155,6 @@ void DX12Render::DrawPrepare()
 	isUpdateDraw = false;
 }
 
-
-std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> DX12Render::GetStaticSamplers()
-{
-	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
-		0, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
-		1, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-		2, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
-		3, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
-		4, // shaderRegister
-		D3D12_FILTER_ANISOTROPIC, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
-		0.0f,                             // mipLODBias
-		8);                               // maxAnisotropy
-
-	const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
-		5, // shaderRegister
-		D3D12_FILTER_ANISOTROPIC, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
-		0.0f,                              // mipLODBias
-		8);                                // maxAnisotropy
-
-	return {
-		pointWrap, pointClamp,
-		linearWrap, linearClamp,
-		anisotropicWrap, anisotropicClamp };
-}
 
 void DX12Render::BulidDescriptorHeaps(int index)
 {
@@ -232,16 +179,26 @@ void DX12Render::BulidConstantBuffers(int index)
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
 
-
-
 }
 
-void DX12Render::BuildShaderResourceView(int index)
+void DX12Render::BuildShaderResourceView(int index,const std::string& Name)
 {
 		//获取偏移
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	auto woodCrateTex = mTextures["ZLStaticMesh"]->Resource;
+	std::string ResourceName;
+
+	//消除虚幻导出的'\0'
+	std::string str(Name.c_str());
+	str.resize(str.size());
+
+	if (mTextures.find(str) == mTextures.end()) {
+		ResourceName = "Null";
+	}
+	else {
+		ResourceName = str;
+	}
+	auto woodCrateTex = mTextures[ResourceName]->Resource;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -258,29 +215,8 @@ void DX12Render::BuildShaderResourceView(int index)
 
 void DX12Render::BulidRootSignature()
 {
-	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
-	CD3DX12_DESCRIPTOR_RANGE texTable;
-	texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-
-	CD3DX12_DESCRIPTOR_RANGE cbvTable;
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
-	slotRootParameter[1].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
-	auto staticSamplers = GetStaticSamplers();
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, (UINT)staticSamplers.size(), staticSamplers.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-
-	ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
-	if (errorBlob != nullptr) {
-		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-	}
-	ThrowIfFailed(hr);
-	ThrowIfFailed(md3dDevice->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
+	ThrowIfFailed(md3dDevice->CreateRootSignature(0, mvsByteCode->GetBufferPointer(), mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
-
 void DX12Render::BulidShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
@@ -464,9 +400,22 @@ void DX12Render::LoadTexture()
 
 	auto createTex = std::make_unique<Texture>();
 	createTex->Name = "ZLStaticMesh";
-	createTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\bricks.dds";
+	createTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\em080_00_BML.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createTex->Filename.c_str(), createTex->Resource, createTex->UploadHeap));
 	mTextures[createTex->Name] = std::move(createTex);
+
+	auto createTex2 = std::make_unique<Texture>();
+	createTex2->Name = "GLStaticMesh";
+	createTex2->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\em012_BM_01.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createTex2->Filename.c_str(), createTex2->Resource, createTex2->UploadHeap));
+	mTextures[createTex2->Name] = std::move(createTex2);
+
+	auto createNullTex = std::make_unique<Texture>();
+	createNullTex->Name = "Null";
+	createNullTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\tile.dds";
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createNullTex->Filename.c_str(), createNullTex->Resource, createNullTex->UploadHeap));
+	mTextures[createNullTex->Name] = std::move(createNullTex);
+
 
 	ThrowIfFailed(mCommandList->Close());
 

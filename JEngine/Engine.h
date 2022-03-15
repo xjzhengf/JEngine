@@ -32,6 +32,3 @@ private:
 	std::unique_ptr<TaskManager> mTaskManager;
 	bool isRuning;
 };
-
-
-
