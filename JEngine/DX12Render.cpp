@@ -18,8 +18,8 @@ bool DX12Render::Initialize()
 	if (!D3DInit::Initialize())
 		return false;
 
-	LoadTexture();
 
+	LoadTexture();
 	return true;
 }
 
@@ -29,7 +29,7 @@ void DX12Render::OnResize()
 	SceneManager::GetSceneManager()->GetCamera()->SetCameraPos(2000.0f, 2000.0f, 2000.0f);
 	SceneManager::GetSceneManager()->GetCamera()->SetLens(0.25f * glm::pi<float>(), AspectRatio(), 1.0f, 10000.0f);
 	SceneManager::GetSceneManager()->GetCamera()->LookAt(SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f(), 
-		glm::vec3(0.0f, 0.0f, 0.0f), SceneManager::GetSceneManager()->GetCamera()->GetUp());
+	glm::vec3(0.0f, 0.0f, 0.0f), SceneManager::GetSceneManager()->GetCamera()->GetUp());
 }
 
 void DX12Render::Update(const GameTimer& gt)
@@ -101,8 +101,12 @@ void DX12Render::Draw(const GameTimer& gt)
 		mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
 		mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
+		hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	//	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
+		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+
 		mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(i)].IndexCount, 1,
 			(UINT)mBoxGeo->DrawArgs[std::to_string(i)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(i)].BaseVertexLocation, 0);
 		i++;
@@ -456,10 +460,17 @@ void DX12Render::BuildPSO()
 
 void DX12Render::LoadTexture()
 {
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+
 	auto createTex = std::make_unique<Texture>();
 	createTex->Name = "ZLStaticMesh";
-	createTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\em080_00_BML.dds";
+	createTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\bricks.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createTex->Filename.c_str(), createTex->Resource, createTex->UploadHeap));
 	mTextures[createTex->Name] = std::move(createTex);
+
+	ThrowIfFailed(mCommandList->Close());
+
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 }
 
