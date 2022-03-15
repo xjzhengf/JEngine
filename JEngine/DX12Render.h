@@ -68,6 +68,7 @@ private:
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
+	std::unordered_map<std::string, std::unique_ptr<Texture>> mNormal;
 
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;

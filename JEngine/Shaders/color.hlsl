@@ -6,8 +6,8 @@
 
 #define Sample_RootSig \
 "RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
-"DescriptorTable(CBV(b0,numDescriptors = 1), visibility = SHADER_VISIBILITY_VERTEX),"\
-"DescriptorTable(SRV(t0,numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL),"\
+"DescriptorTable(CBV(b0,numDescriptors = 1), visibility = SHADER_VISIBILITY_ALL),"\
+"DescriptorTable(SRV(t0,numDescriptors = 2), visibility = SHADER_VISIBILITY_PIXEL),"\
 "RootConstants(b1, num32BitConstants = 3),"\
 "StaticSampler(s0," \
                 "addressU = TEXTURE_ADDRESS_WRAP," \
@@ -16,6 +16,7 @@
                 "filter = FILTER_MIN_MAG_MIP_POINT)"
 
 Texture2D    gDiffuseMap : register(t0);
+Texture2D    gNormalMap : register(t1);
 SamplerState gsamPointWrap        : register(s0);
 //SamplerState gsamPointClamp       : register(s1);
 //SamplerState gsamLinearWrap       : register(s2);
@@ -74,9 +75,10 @@ VertexOut VS(VertexIn vin)
 float4 PS(VertexOut pin) : SV_Target
 {
 	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
-	//float4 ResultColor = float4(pin.Normal*0.5f+0.5f,1.0f);
+	float4 normalAlbedo = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+	float4 ResultColor = normalAlbedo * diffuseAlbedo;
 
-	return diffuseAlbedo;
+	return ResultColor;
 }
 
 
