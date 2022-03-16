@@ -13,117 +13,150 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Manager">
+      <UniqueIdentifier>{171cf521-909f-4670-b5d3-74699d80492a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{788299d7-d6e4-4888-830b-eff97c1761ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D3D">
+      <UniqueIdentifier>{922a359a-1100-4672-95ad-6f626306ce59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{ba05f0ea-ca07-4a38-940b-bb47055d7a15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{37e343f0-abda-401d-99ec-72e2ab741304}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{1b158eee-e34b-4fa8-9062-73cf9d3c4b20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RHI">
+      <UniqueIdentifier>{4f034af5-a35b-4a21-8c9e-0896bcf0a988}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Manager\Header">
+      <UniqueIdentifier>{5fc305dd-e8c7-48a1-9255-ae7b1b819853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Manager\Source">
+      <UniqueIdentifier>{c2ca850e-ed6f-4312-9e6e-b40a784f945a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RHI\Header">
+      <UniqueIdentifier>{8d90c306-5cfd-47ff-8e74-6228f0f4fb76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RHI\Source">
+      <UniqueIdentifier>{116fd16c-0f4e-4524-9510-69a5ef1fc97e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AssetManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D3DInit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D3DUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DX12Render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Camera</Filter>
     </ClCompile>
     <ClCompile Include="FirstPersonCamera.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Camera</Filter>
     </ClCompile>
-    <ClCompile Include="GameTimer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="D3DUtil.cpp">
+      <Filter>D3D</Filter>
     </ClCompile>
-    <ClCompile Include="LauncherPCWindow.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>D3D</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Render.cpp">
+      <Filter>D3D</Filter>
     </ClCompile>
     <ClCompile Include="MathHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TaskManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowsFactory.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>D3D</Filter>
     </ClCompile>
     <ClCompile Include="WindowsInputBase.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsFactory.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="LauncherPCWindow.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>D3D</Filter>
+    </ClCompile>
+    <ClCompile Include="GameTimer.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="AssetManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI.cpp">
+      <Filter>RHI\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AssetManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D3DInit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D3DUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dx12.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DX12Render.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>Header Files</Filter>
+      <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="FirstPersonCamera.h">
-      <Filter>Header Files</Filter>
+      <Filter>Camera</Filter>
     </ClInclude>
-    <ClInclude Include="GameTimer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="D3DUtil.h">
+      <Filter>D3D</Filter>
     </ClInclude>
-    <ClInclude Include="LauncherPCWindow.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="d3dx12.h">
+      <Filter>D3D</Filter>
     </ClInclude>
-    <ClInclude Include="MathHelper.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>D3D</Filter>
     </ClInclude>
-    <ClInclude Include="MeshProperty.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TaskManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DX12Render.h">
+      <Filter>D3D</Filter>
     </ClInclude>
     <ClInclude Include="UploadBuffer.h">
-      <Filter>Header Files</Filter>
+      <Filter>D3D</Filter>
     </ClInclude>
-    <ClInclude Include="WindowBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsFactory.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="MathHelper.h">
+      <Filter>D3D</Filter>
     </ClInclude>
     <ClInclude Include="WindowsInputBase.h">
-      <Filter>Header Files</Filter>
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowBase.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsFactory.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="LauncherPCWindow.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>D3D</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTimer.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="AssetManager.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshProperty.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskManager.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI.h">
+      <Filter>RHI\Header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

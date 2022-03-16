@@ -142,7 +142,6 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="D3DInit.cpp" />
     <ClCompile Include="D3DUtil.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DX12Render.cpp" />
@@ -151,6 +150,7 @@
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="LauncherPCWindow.cpp" />
     <ClCompile Include="MathHelper.cpp" />
+    <ClCompile Include="RHI.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="TaskManager.cpp" />
@@ -160,7 +160,6 @@
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="D3DInit.h" />
     <ClInclude Include="D3DUtil.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader.h" />
@@ -171,6 +170,7 @@
     <ClInclude Include="LauncherPCWindow.h" />
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="MeshProperty.h" />
+    <ClInclude Include="RHI.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TaskManager.h" />

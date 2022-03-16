@@ -7,6 +7,7 @@ void GameInstance::Init(HINSTANCE hInstance)
 	mGameLogic = std::make_unique<GameLogic>();
 	mEngine->Init(hInstance);
 	mGameLogic->Init();
+	
 }
 
 void GameInstance::UpDate()

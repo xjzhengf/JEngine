@@ -74,6 +74,7 @@ VertexOut VS(VertexIn vin)
 [RootSignature(Sample_RootSig)]
 float4 PS(VertexOut pin) : SV_Target
 {
+
 	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
 	float4 normalAlbedo = gNormalMap.Sample(gsamPointWrap, pin.TexC);
 	float4 ResultColor = normalAlbedo * diffuseAlbedo;

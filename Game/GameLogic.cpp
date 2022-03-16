@@ -41,7 +41,6 @@ bool GameLogic::LoadMap(const std::string& PathName)
 {
 	if (Engine::GetEngine()->GetSceneManager()->LoadMap(PathName.c_str())) {
 		//更新绘制模型
-		Engine::GetEngine()->UpdateDrawState(true);
 		return true;
 	}
 	return false;

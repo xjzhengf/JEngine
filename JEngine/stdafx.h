@@ -38,6 +38,6 @@
 #include "MathHelper.h"
 #include"iostream"
 #include "vector"
-
+#include "GameTimer.h"
 #define _CRTDBG_MAP_ALLOC
 using CallBackInString = std::function<void(std::string)>;

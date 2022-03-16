@@ -5,7 +5,6 @@
 #include "FirstPersonCamera.h"
 #include "GameLogic.h"
 #include "WindowsInput.h"
-#include <thread>
 Engine* Engine::mEngine = nullptr;
 Engine::Engine()
 {
@@ -57,14 +56,9 @@ void Engine::RenderTick(GameTimer& gt)
 {
 	mWindows->CalculateFrameStats(gt);
 	gt.Tick();
-	if (!mRender->GetAppPause()) {
-		mRender->Update(gt);
-		mRender->Draw(gt);
-	}
-	else
-	{
-		Sleep(100);
-	}
+	
+	mRender->Update(gt);
+	mRender->Draw(gt);
 }
 
 
@@ -100,10 +94,6 @@ std::shared_ptr<SceneManager> Engine::GetSceneManager()
 	return mSceneManager;
 }
 
-void Engine::UpdateDrawState(bool state)
-{
-	mRender->isUpdateDraw = state;
-}
 
 std::shared_ptr<WindowBase> Engine::GetWindow()
 {
