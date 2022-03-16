@@ -46,6 +46,15 @@
     <Filter Include="RHI\Source">
       <UniqueIdentifier>{116fd16c-0f4e-4524-9510-69a5ef1fc97e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rander">
+      <UniqueIdentifier>{9b36c726-cc86-4094-9311-477dd5c30cb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rander\Header">
+      <UniqueIdentifier>{709aa28c-bb2f-4360-ac2f-b76dc89d2aff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rander\Source">
+      <UniqueIdentifier>{99157da4-7627-4fd0-8f47-e1a35f353911}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -60,9 +69,6 @@
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>D3D</Filter>
     </ClCompile>
-    <ClCompile Include="DX12Render.cpp">
-      <Filter>D3D</Filter>
-    </ClCompile>
     <ClCompile Include="MathHelper.cpp">
       <Filter>D3D</Filter>
     </ClCompile>
@@ -74,9 +80,6 @@
     </ClCompile>
     <ClCompile Include="LauncherPCWindow.cpp">
       <Filter>Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>D3D</Filter>
     </ClCompile>
     <ClCompile Include="GameTimer.cpp">
       <Filter>Game</Filter>
@@ -93,8 +96,14 @@
     <ClCompile Include="AssetManager.cpp">
       <Filter>Manager\Source</Filter>
     </ClCompile>
-    <ClCompile Include="RHI.cpp">
+    <ClCompile Include="DX12RHI.cpp">
       <Filter>RHI\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Render.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>D3D</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,9 +120,6 @@
       <Filter>D3D</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader.h">
-      <Filter>D3D</Filter>
-    </ClInclude>
-    <ClInclude Include="DX12Render.h">
       <Filter>D3D</Filter>
     </ClInclude>
     <ClInclude Include="UploadBuffer.h">
@@ -133,9 +139,6 @@
     </ClInclude>
     <ClInclude Include="LauncherPCWindow.h">
       <Filter>Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>D3D</Filter>
     </ClInclude>
     <ClInclude Include="GameTimer.h">
       <Filter>Game</Filter>
@@ -157,6 +160,15 @@
     </ClInclude>
     <ClInclude Include="RHI.h">
       <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12RHI.h">
+      <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Render.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>D3D</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,14 +5,12 @@
 #define _CRTDBG_MAP_ALLOC
 
 #endif
-#include "D3DUtil.h"
-#include "GameTimer.h"
+#include "RHI.h"
+#include "UploadBuffer.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
-#include "UploadBuffer.h"
-#include "MathHelper.h"
-#include "MeshProperty.h"
+
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
@@ -40,21 +38,21 @@ struct ObjectConstants {
 	float Time = 0.0f;
 };
 
-class DX12Render  {
+class DX12RHI  :public FRHI{
 public:
-	DX12Render();
-	DX12Render(const DX12Render& sm) = delete;
-	DX12Render& operator=(const DX12Render& sm) = delete;
-	~DX12Render();
+	DX12RHI();
+	DX12RHI(const DX12RHI& sm) = delete;
+	DX12RHI& operator=(const DX12RHI& sm) = delete;
+	~DX12RHI();
 	float AspectRatio() const;
 	bool Get4xMsaaState() const;
 	bool IsHaveDevice() const;
 	void Set4xMsaaState(bool value);
 
-	 bool Initialize() ;
+	 virtual bool Initialize() override ;
 	 void OnResize() ;
-	 void Update(const GameTimer& gt) ;
-	 void Draw(const GameTimer& gt) ;
+	 virtual void Update(const GameTimer& gt) override;
+	 virtual void Draw(const GameTimer& gt) override;
 
 	void DrawPrepare() ;
 	void SetWindow(HWND mhMainWnd);
@@ -78,6 +76,7 @@ protected:
 	bool mResizing = false;         //调整大小是否被拖动
 	bool mFullscreenState = false;  //开启全屏
 
+	static DX12RHI* mDX12RHI;
 private:
 	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
 	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;

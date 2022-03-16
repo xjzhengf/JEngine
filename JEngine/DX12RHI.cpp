@@ -1,21 +1,32 @@
 #include "stdafx.h"
-#include "DX12Render.h"
+#include "DX12RHI.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
 #include "Engine.h"
-
-DX12Render::DX12Render() 
+DX12RHI* DX12RHI::mDX12RHI = nullptr;
+DX12RHI::DX12RHI() 
 {
+	assert(mDX12RHI == nullptr);
+	if (mDX12RHI == nullptr) {
+		mDX12RHI = this;
+	}
 	SetClientHeight(Engine::GetEngine()->GetWindow()->GetClientHeight());
 	SetClientWidht(Engine::GetEngine()->GetWindow()->GetClientWidht());
 	SetWindow(Engine::GetEngine()->GetWindow()->GetHWnd());
 }
 
-DX12Render::~DX12Render()
+DX12RHI::~DX12RHI()
 {
+	if (mBoxGeo!= nullptr)
+	{
+		mBoxGeo = nullptr;
+	}
+	if (mDX12RHI != nullptr) {
+		mDX12RHI = nullptr;
+	}
 }
 
-bool DX12Render::Initialize()
+bool DX12RHI::Initialize()
 {
 	if (!InitDirect3D()) {
 		return false;
@@ -25,7 +36,7 @@ bool DX12Render::Initialize()
 	return true;
 }
 
-void DX12Render::OnResize()
+void DX12RHI::OnResize()
 {
 	assert(md3dDevice);
 	assert(mSwapChain);
@@ -115,17 +126,17 @@ void DX12Render::OnResize()
 	glm::vec3(0.0f, 0.0f, 0.0f), SceneManager::GetSceneManager()->GetCamera()->GetUp());
 }
 
-float DX12Render::AspectRatio() const
+float DX12RHI::AspectRatio() const
 {
 	return static_cast<float>(mClientWidht) / mClientHeight;
 }
 
-bool DX12Render::Get4xMsaaState() const
+bool DX12RHI::Get4xMsaaState() const
 {
 	return m4xMsaaState;
 }
 
-bool DX12Render::IsHaveDevice() const
+bool DX12RHI::IsHaveDevice() const
 {
 	if (md3dDevice) {
 		return true;
@@ -133,7 +144,7 @@ bool DX12Render::IsHaveDevice() const
 	return false;
 }
 
-void DX12Render::Set4xMsaaState(bool value)
+void DX12RHI::Set4xMsaaState(bool value)
 {
 	if (m4xMsaaState != value) {
 		m4xMsaaState = value;
@@ -142,30 +153,31 @@ void DX12Render::Set4xMsaaState(bool value)
 		OnResize();
 	}
 }
-void DX12Render::SetWindow(HWND mhMainWnd)
+void DX12RHI::SetWindow(HWND mhMainWnd)
 {
 	this->mhMainWnd = mhMainWnd;
 }
 
-void DX12Render::SetClientWidht(int Width)
+void DX12RHI::SetClientWidht(int Width)
 {
 	this->mClientWidht = Width;
 }
 
-void DX12Render::SetClientHeight(int Height)
+void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12Render::Update(const GameTimer& gt)
-{
-}
-
-void DX12Render::Draw(const GameTimer& gt)
+void DX12RHI::Update(const GameTimer& gt)
 {
 	if (IsRunDrawPrepare) {
 		DrawPrepare();
 		IsRunDrawPrepare = false;
 	}
+}
+
+void DX12RHI::Draw(const GameTimer& gt)
+{
+
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
 
@@ -254,7 +266,7 @@ void DX12Render::Draw(const GameTimer& gt)
 	FlushCommandQueue();
 }
 
-void DX12Render::DrawPrepare()
+void DX12RHI::DrawPrepare()
 {
 	LoadTexture();
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
@@ -282,7 +294,7 @@ void DX12Render::DrawPrepare()
 }
 
 
-void DX12Render::BulidDescriptorHeaps(int index)
+void DX12RHI::BulidDescriptorHeaps(int index)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = 3;
@@ -292,7 +304,7 @@ void DX12Render::BulidDescriptorHeaps(int index)
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[index])));
 }
 
-void DX12Render::BulidConstantBuffers(int index)
+void DX12RHI::BulidConstantBuffers(int index)
 {
 	mObjectCB[index] = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
 	UINT objecBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
@@ -307,7 +319,7 @@ void DX12Render::BulidConstantBuffers(int index)
 
 }
 
-void DX12Render::BuildShaderResourceView(int index,const std::string& Name)
+void DX12RHI::BuildShaderResourceView(int index,const std::string& Name)
 {
 		//获取偏移
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
@@ -358,11 +370,11 @@ void DX12Render::BuildShaderResourceView(int index,const std::string& Name)
 
 
 
-void DX12Render::BulidRootSignature()
+void DX12RHI::BulidRootSignature()
 {
 	ThrowIfFailed(md3dDevice->CreateRootSignature(0, mvsByteCode->GetBufferPointer(), mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
-void DX12Render::BulidShadersAndInputLayout()
+void DX12RHI::BulidShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
 	mvsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
@@ -377,7 +389,7 @@ void DX12Render::BulidShadersAndInputLayout()
 	};
 }
 
-void DX12Render::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
+void DX12RHI::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
 {
 	//将模型数据数组里的数据合并为一个大数据
 	size_t totalVertexSize = 0;
@@ -413,7 +425,7 @@ void DX12Render::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(uint32_t);
 
 	mBoxGeo = std::make_unique<MeshGeometry>();
-	mBoxGeo->Name = "DX12Render";
+	mBoxGeo->Name = "DX12RHI";
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
 	CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
 
@@ -439,11 +451,9 @@ void DX12Render::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
 		std::string name = std::to_string(i);
 		mBoxGeo->DrawArgs[name] = submesh;
 	}
-
-
 }
 
-void DX12Render::BuildStaticMeshData(StaticMeshInfo* myStruct)
+void DX12RHI::BuildStaticMeshData(StaticMeshInfo* myStruct)
 {
 	MeshData meshData;
 	meshData.indices = myStruct->Indices;
@@ -485,7 +495,7 @@ void DX12Render::BuildStaticMeshData(StaticMeshInfo* myStruct)
 	meshDataVector.push_back(std::move(meshData));
 }
 
-void DX12Render::BuildPSO()
+void DX12RHI::BuildPSO()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -539,7 +549,7 @@ void DX12Render::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
 }
 
-void DX12Render::LoadTexture()
+void DX12RHI::LoadTexture()
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
@@ -575,7 +585,7 @@ void DX12Render::LoadTexture()
 }
 
 
-bool DX12Render::InitDirect3D()
+bool DX12RHI::InitDirect3D()
 {
 #if defined(DEBUG) || defined(_DEBUG)
 	{
@@ -620,7 +630,7 @@ bool DX12Render::InitDirect3D()
 	return true;
 }
 
-void DX12Render::CreateCommandObjects()
+void DX12RHI::CreateCommandObjects()
 {
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -630,7 +640,7 @@ void DX12Render::CreateCommandObjects()
 	ThrowIfFailed(md3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mDirectCmdListAlloc.Get(), nullptr, IID_PPV_ARGS(mCommandList.GetAddressOf())));
 	mCommandList->Close();
 }
-void DX12Render::CreateRtvAndDsvDescriptorHeaps()
+void DX12RHI::CreateRtvAndDsvDescriptorHeaps()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
 	rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
@@ -645,7 +655,7 @@ void DX12Render::CreateRtvAndDsvDescriptorHeaps()
 	dsvHeapDesc.NumDescriptors = 1;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
 }
-void DX12Render::CreateSpawChain()
+void DX12RHI::CreateSpawChain()
 {
 	mSwapChain.Reset();
 
@@ -670,7 +680,7 @@ void DX12Render::CreateSpawChain()
 
 }
 
-void DX12Render::FlushCommandQueue()
+void DX12RHI::FlushCommandQueue()
 {
 	mCurrentFence++;
 	//设置一个栅栏点，如果gpu上任务未完成则栏点设置失败
@@ -688,23 +698,23 @@ void DX12Render::FlushCommandQueue()
 
 }
 
-ID3D12Resource* DX12Render::CurrentBackBuffer() const
+ID3D12Resource* DX12RHI::CurrentBackBuffer() const
 {
 	return mSwapChainBuffer[mCurrBackBuffer].Get();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12Render::CurrentBackBufferView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::CurrentBackBufferView() const
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mCurrBackBuffer, mRtvDescriptorSize);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12Render::DepthStencilView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::DepthStencilView() const
 {
 	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
 
-void DX12Render::LogAdapters()
+void DX12RHI::LogAdapters()
 {
 	UINT i = 0;
 	IDXGIAdapter* adapter = nullptr;
@@ -729,7 +739,7 @@ void DX12Render::LogAdapters()
 	}
 }
 
-void DX12Render::LogAdapterOutputs(IDXGIAdapter* adapter)
+void DX12RHI::LogAdapterOutputs(IDXGIAdapter* adapter)
 {
 	UINT i = 0;
 	IDXGIOutput* output = nullptr;
@@ -749,7 +759,7 @@ void DX12Render::LogAdapterOutputs(IDXGIAdapter* adapter)
 	}
 }
 
-void DX12Render::LogOutputDisplayerModes(IDXGIOutput* output, DXGI_FORMAT format)
+void DX12RHI::LogOutputDisplayerModes(IDXGIOutput* output, DXGI_FORMAT format)
 {
 	UINT count = 0;
 	UINT flags = 0;

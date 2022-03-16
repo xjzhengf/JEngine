@@ -26,14 +26,15 @@ void Engine::Init(HINSTANCE hInstance)
 	mWindows->InitWindows();
 
 	//初始化Render
-	mRender = std::make_unique<DX12Render>();
+	mRender = std::make_unique<FRender>();
 
 	//初始化资源管理和场景管理
 	mAssetManager = std::make_shared<AssetManager>();
 	mSceneManager = std::make_shared<SceneManager>();
 
+
 	//初始化Render
-	mRender->Initialize();
+	mRender->Init();
 	//创建任务管理系统
 	mTaskManager = std::make_unique<TaskManager>(GetModuleHandle(0));
 }
@@ -56,9 +57,7 @@ void Engine::RenderTick(GameTimer& gt)
 {
 	mWindows->CalculateFrameStats(gt);
 	gt.Tick();
-	
-	mRender->Update(gt);
-	mRender->Draw(gt);
+	mRender->Render(gt);
 }
 
 
