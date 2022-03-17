@@ -105,6 +105,15 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>D3D</Filter>
     </ClCompile>
+    <ClCompile Include="RHIResource.cpp">
+      <Filter>RHI\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FTexture.cpp">
+      <Filter>RHI\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRHIResource.cpp">
+      <Filter>RHI\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -169,6 +178,15 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>D3D</Filter>
+    </ClInclude>
+    <ClInclude Include="RHIResource.h">
+      <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FTexture.h">
+      <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRHIResource.h">
+      <Filter>RHI\Header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

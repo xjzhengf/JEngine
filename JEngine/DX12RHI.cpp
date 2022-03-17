@@ -26,6 +26,11 @@ DX12RHI::~DX12RHI()
 	}
 }
 
+DX12RHI* DX12RHI::GetDX12RHI()
+{
+	return mDX12RHI;
+}
+
 bool DX12RHI::Initialize()
 {
 	if (!InitDirect3D()) {
@@ -169,32 +174,8 @@ void DX12RHI::SetClientHeight(int Height)
 }
 void DX12RHI::Update(const GameTimer& gt)
 {
-	if (IsRunDrawPrepare) {
-		DrawPrepare();
-		IsRunDrawPrepare = false;
-	}
-}
-
-void DX12RHI::Draw(const GameTimer& gt)
-{
-
-	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
-
-	mCommandList->RSSetViewports(1, &mScreenViewport);
-	mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	mCommandList->OMSetStencilRef(0);
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
 	Time = gt.TotalTime();
-	
-
-	glm::vec3 cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
-	
+	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
 
 	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
@@ -228,47 +209,55 @@ void DX12RHI::Draw(const GameTimer& gt)
 		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
 		mObjectCB[i]->CopyData(0, objConstants);
-		
+		i++;
+	}
+}
 
-		
-		ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[i].Get() };
-		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+void DX12RHI::Draw(const GameTimer& gt)
+{
 
-		mCommandList->SetGraphicsRootSignature(mRootSigmature.Get()); 
+	//mCommandList->RSSetViewports(1, &mScreenViewport);
+	//mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+	//mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	//mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	//mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	//mCommandList->OMSetStencilRef(0);
+	//mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
 	
 
-		mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
-		mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
-		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
-		hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
-		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
-		mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
-		mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(i)].IndexCount, 1,
-			(UINT)mBoxGeo->DrawArgs[std::to_string(i)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(i)].BaseVertexLocation, 0);
-		i++;
-	}
+		
+	//for (int i = 0 ; i< meshDataVector.size();i++)
+	//{
+		/*ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[i].Get() };
+		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);*/
+		//mCommandList->SetGraphicsRootSignature(mRootSigmature.Get()); 
+		//mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
+		//mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
+		//mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		//CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
+		//hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		//mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[i]->GetGPUDescriptorHandleForHeapStart());
+		//mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+		//mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
+	/*	mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(i)].IndexCount, 1,
+			(UINT)mBoxGeo->DrawArgs[std::to_string(i)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(i)].BaseVertexLocation, 0);*/
+	//}
+	//mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	//ThrowIfFailed(mCommandList->Close());
+	//ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	//mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	//ThrowIfFailed(mSwapChain->Present(0, 0));
+	//mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-	ThrowIfFailed(mCommandList->Close());
-
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-
-	ThrowIfFailed(mSwapChain->Present(0, 0));
-	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
-
-	FlushCommandQueue();
+	//FlushCommandQueue();
 }
 
 void DX12RHI::DrawPrepare()
 {
-	LoadTexture();
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
 	BulidShadersAndInputLayout();
@@ -350,7 +339,7 @@ void DX12RHI::BuildShaderResourceView(int index,const std::string& Name)
 	ComPtr<ID3D12Resource>  woodCrateNormal;
 	if (ResourceName == "Null")
 	{
-		woodCrateNormal = mNormal["Null"]->Resource;
+		woodCrateNormal = mTextures["Normal"]->Resource;
 	}
 	else
 	{
@@ -549,39 +538,135 @@ void DX12RHI::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
 }
 
-void DX12RHI::LoadTexture()
+void DX12RHI::LoadTexture(FRHIResource* TextureResource)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
-	auto createTex = std::make_unique<Texture>();
-	createTex->Name = "ZLStaticMesh";
-	createTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\em080_00_BML.dds";
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createTex->Filename.c_str(), createTex->Resource, createTex->UploadHeap));
-	mTextures[createTex->Name] = std::move(createTex);
-
-	auto createTex2 = std::make_unique<Texture>();
-	createTex2->Name = "GLStaticMesh";
-	createTex2->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\em012_BM_01.dds";
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createTex2->Filename.c_str(), createTex2->Resource, createTex2->UploadHeap));
-	mTextures[createTex2->Name] = std::move(createTex2);
+	auto texture = dynamic_cast<FTexture*>(TextureResource);
 
 	auto createNullTex = std::make_unique<Texture>();
-	createNullTex->Name = "Null";
-	createNullTex->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\tile.dds";
+	createNullTex->Name = texture->Name;
+	createNullTex->Filename =texture->FilePath;
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createNullTex->Filename.c_str(), createNullTex->Resource, createNullTex->UploadHeap));
 	mTextures[createNullTex->Name] = std::move(createNullTex);
-
-
-	auto createNormal = std::make_unique<Texture>();
-	createNormal->Name = "Null";
-	createNormal->Filename = L"..\\JEngine\\StaticMeshInfo\\UV\\tile_nmap.dds";
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createNormal->Filename.c_str(), createNormal->Resource, createNormal->UploadHeap));
-	mNormal[createNormal->Name] = std::move(createNormal);
-
-
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+}
+
+void DX12RHI::ExecuteCommandLists()
+{
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	ThrowIfFailed(mSwapChain->Present(0, 0));
+	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
+
+	FlushCommandQueue();
+}
+
+void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)
+{
+
+	mScreenViewport.Height = Height;
+	mScreenViewport.MaxDepth = MaxDepth;
+	mScreenViewport.MinDepth = MinDepth;
+	mScreenViewport.TopLeftX = TopLeftX;
+	mScreenViewport.TopLeftY = TopLeftY;
+	mScreenViewport.Width = Width;
+	mCommandList->RSSetViewports(1, &mScreenViewport);
+}
+
+void DX12RHI::ResetCommand()
+{
+	ThrowIfFailed(mDirectCmdListAlloc->Reset());
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+}
+
+void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)
+{
+	mScissorRect.bottom = bottom;
+	mScissorRect.right = right;
+	mScissorRect.left = left;
+	mScissorRect.top = top;
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+}
+
+void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, int stateBefore , int stateAfter)
+{
+	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
+}
+
+void DX12RHI::ClearRenderTargetView()
+{
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+}
+
+void DX12RHI::ClearDepthStencilView()
+{
+	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+}
+
+void DX12RHI::OMSetStencilRef(int StencilRef)
+{
+	mCommandList->OMSetStencilRef(StencilRef);
+}
+
+void DX12RHI::OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)
+{
+	mCommandList->OMSetRenderTargets(numTatgetDescriptors, &CurrentBackBufferView(), RTsSingleHandleToDescriptorRange, &DepthStencilView());
+}
+
+void DX12RHI::SetDescriptorHeaps(int index)
+{
+	ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[index].Get() };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+}
+
+void DX12RHI::SetGraphicsRootSignature()
+{
+	mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
+}
+
+void DX12RHI::IASetVertexBuffers()
+{
+	mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
+}
+
+void DX12RHI::IASetIndexBuffer()
+{
+	mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
+}
+
+void DX12RHI::IASetPrimitiveTopology()
+{
+	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void DX12RHI::Offset(int index)
+{
+	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+}
+
+void DX12RHI::SetGraphicsRootDescriptorTable(int index)
+{
+	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+}
+
+void DX12RHI::SetGraphicsRoot32BitConstants()
+{
+	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
+}
+
+void DX12RHI::DrawIndexedInstanced(int index)
+{
+	mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(index)].IndexCount, 1,
+		(UINT)mBoxGeo->DrawArgs[std::to_string(index)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(index)].BaseVertexLocation, 0);
+
 }
 
 

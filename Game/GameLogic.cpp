@@ -40,7 +40,8 @@ GameLogic* GameLogic::GetGameLogic()
 bool GameLogic::LoadMap(const std::string& PathName)
 {
 	if (Engine::GetEngine()->GetSceneManager()->LoadMap(PathName.c_str())) {
-		//更新绘制模型
+		//LoadTexture
+		Engine::GetEngine()->GetAssetManager()->LoadTexture();
 		return true;
 	}
 	return false;

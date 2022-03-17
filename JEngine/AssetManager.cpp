@@ -89,6 +89,30 @@ StaticMeshInfo* AssetManager::FindAssetByActor(ActorStruct& actor)
 	return nullptr;
 }
 
+void AssetManager::LoadTexture()
+{
+	auto createTex = std::make_unique<FTexture>();
+	createTex->Name = "ZLStaticMesh";
+	createTex->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\em080_00_BML.dds";
+	mTextures.push_back(std::move(createTex));
+
+	auto createTex2 = std::make_unique<FTexture>();
+	createTex2->Name = "GLStaticMesh";
+	createTex2->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\em012_BM_01.dds";
+	mTextures.push_back(std::move(createTex2));
+
+	auto createNullTex = std::make_unique<FTexture>();
+	createNullTex->Name = "Null";
+	createNullTex->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\tile.dds";
+	mTextures.push_back(std::move(createNullTex));
+
+
+	auto createNormal = std::make_unique<FTexture>();
+	createNormal->Name = "Normal";
+	createNormal->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\tile_nmap.dds";
+	mTextures.push_back(std::move(createNormal));
+}
+
 void AssetManager::SelectFile()
 {
 	char* TextPathName = new char;
@@ -130,6 +154,10 @@ void AssetManager::SelectFile()
 std::unordered_map<std::string, StaticMeshInfo*>& AssetManager::GetMeshAsset()
 {
 	return MeshAsset;
+}
+std::vector<std::shared_ptr<FTexture>>& AssetManager::GetTextures()
+{
+	return mTextures;
 }
 
 

@@ -7,6 +7,7 @@
 #endif
 #include "RHI.h"
 #include "UploadBuffer.h"
+#include "DXRHIResource.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -43,21 +44,21 @@ public:
 	DX12RHI();
 	DX12RHI(const DX12RHI& sm) = delete;
 	DX12RHI& operator=(const DX12RHI& sm) = delete;
-	~DX12RHI();
+	virtual ~DX12RHI();
 	float AspectRatio() const;
 	bool Get4xMsaaState() const;
 	bool IsHaveDevice() const;
 	void Set4xMsaaState(bool value);
 
+	static DX12RHI* GetDX12RHI();
 	 virtual bool Initialize() override ;
 	 void OnResize() ;
-	 virtual void Update(const GameTimer& gt) override;
-	 virtual void Draw(const GameTimer& gt) override;
 
-	void DrawPrepare() ;
 	void SetWindow(HWND mhMainWnd);
 	void SetClientWidht(int Width);
 	void SetClientHeight(int Height);
+	ID3D12Resource* CurrentBackBuffer()const;
+		D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
 	void BulidDescriptorHeaps(int index);
 	void BulidConstantBuffers(int index);
@@ -67,7 +68,32 @@ private:
 	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);
 	void BuildStaticMeshData(StaticMeshInfo* myStruct);
 	void BuildPSO();
-	void LoadTexture();
+
+
+public:
+	//override RHI
+	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
+	virtual void ResetCommand() override;
+	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
+	virtual void ResourceBarrier(unsigned int NumberBarrier, int stateBefore, int stateAfter) override;
+	virtual void ClearRenderTargetView() override;
+	virtual void ClearDepthStencilView() override;
+	virtual void OMSetStencilRef(int StencilRef) override;
+	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)override;
+	virtual void SetDescriptorHeaps(int index) override;
+	virtual void SetGraphicsRootSignature() override;
+	virtual void IASetVertexBuffers() override;
+	virtual void IASetIndexBuffer() override;
+	virtual void IASetPrimitiveTopology() override;
+	virtual void Offset(int index) override;
+	virtual void SetGraphicsRootDescriptorTable(int index) override;
+	virtual void SetGraphicsRoot32BitConstants() override;
+	virtual void DrawIndexedInstanced(int index) override;
+	virtual void LoadTexture(FRHIResource* TextureResource) override;
+	virtual void ExecuteCommandLists() override;
+	virtual void Update(const GameTimer& gt) override;
+	virtual void Draw(const GameTimer& gt) override;
+	virtual void DrawPrepare() override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -77,6 +103,8 @@ protected:
 	bool mFullscreenState = false;  //¿ªÆôÈ«ÆÁ
 
 	static DX12RHI* mDX12RHI;
+
+	glm::vec3 cameraLoc;
 private:
 	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
 	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
@@ -85,7 +113,6 @@ private:
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-	std::unordered_map<std::string, std::unique_ptr<Texture>> mNormal;
 
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
@@ -108,8 +135,8 @@ protected:
 	void CreateSpawChain();
 	void FlushCommandQueue();
 	void CreateRtvAndDsvDescriptorHeaps();
-	ID3D12Resource* CurrentBackBuffer()const;
-	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
+
+
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 
 	void LogAdapters();

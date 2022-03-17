@@ -4,10 +4,11 @@
 class FRender {
 public:
 	bool Init();
-
+	void RenderBegin();
 	void Render(const GameTimer& gt);
-	std::shared_ptr<FRHI> GetRHI();
+	
 	~FRender();
 private:
-	std::shared_ptr<FRHI> mRHI = nullptr;
+	std::unique_ptr<FRHI> mRHI = nullptr;
+	std::unique_ptr<FRHIResource> mRHIResource = nullptr;
 };
