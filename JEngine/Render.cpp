@@ -8,7 +8,7 @@
 bool FRender::Init()
 {
 	mRHI = std::make_unique<DX12RHI>();
-	mRHIResource = std::make_unique<DXRHIResource>();
+	mRenderResource = std::make_unique<FRenderResource>();
 	if (!mRHI->Initialize()) {
 		return false;
 	}
@@ -38,15 +38,15 @@ void FRender::Render(const GameTimer& gt)
 	for (int i = 0; i < SceneManager::GetSceneManager()->GetAllActor().size(); i++) {
 		mRHI->SetDescriptorHeaps(i);
 		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexBuffers();
-		mRHI->IASetIndexBuffer();
+		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
+		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
 		mRHI->SetGraphicsRootDescriptorTable(i);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(i);
 	}
 	mRHI->ResourceBarrier(1, DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
-	mRHI->Update(gt);
+	mRHI->UpdateMVP(gt);
 	mRHI->ExecuteCommandLists();
 }
 

@@ -45,4 +45,17 @@ struct ActorStruct {
 	std::vector<FTransform> Transform;
 	std::vector <std::string> StaticMeshAssetName;
 };
+struct Vertex
+{
+	glm::vec3 Pos;
+	glm::vec4 Color;
+	glm::vec3 Normal;
+	glm::vec2 TexC;
+};
 
+struct MeshData
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+
+};

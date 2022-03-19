@@ -2,10 +2,13 @@
 #include "FTexture.h"
 
 
-void FTexture::SetResoureInMap(std::string name)
+
+FTexture::FTexture()
 {
-	mFTexture = std::make_shared<FTexture>();
-	mFTexture->Name = this->Name;
-	mFTexture->FilePath = this->FilePath;
-	ResoureMap.insert({name,mFTexture});
+    mFTexture = this;
+}
+
+void FTexture::ReleaseResource()
+{
+    delete mFTexture;
 }

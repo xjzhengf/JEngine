@@ -1,10 +1,15 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
-class FRHI
+#include "FTexture.h"
+#include "BufferView.h"
+class FDynamicRHI
 {
 public:
-	virtual ~FRHI() {};
+	virtual ~FDynamicRHI() {};
+	static FDynamicRHI* GetRHI();
+	static FDynamicRHI* mFDynamicRHI;
+public:
 	virtual bool Initialize() = 0;
 
 	virtual void ResetCommand() = 0;
@@ -17,8 +22,8 @@ public:
 	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange) = 0;
 	virtual void SetDescriptorHeaps(int index) = 0;
 	virtual void SetGraphicsRootSignature() = 0;
-	virtual void IASetVertexBuffers() = 0;
-	virtual void IASetIndexBuffer() = 0;
+	virtual void IASetVertexBuffers(Buffer* buffer) = 0;
+	virtual void IASetIndexBuffer(Buffer* buffer) = 0;
 	virtual void IASetPrimitiveTopology() = 0;
 	virtual void Offset(int index) = 0;
 	virtual void SetGraphicsRootDescriptorTable(int index) {};
@@ -27,8 +32,11 @@ public:
 	virtual void ExecuteCommandLists() = 0;
 
 	virtual void DrawPrepare() = 0;
-	virtual void LoadTexture(FRHIResource* TextureResource) = 0;
+	virtual void LoadTexture(FTexture* TextureResource) = 0;
 	virtual void Draw(const GameTimer& gt) = 0;
-	virtual void Update(const GameTimer& gt) = 0;
+	virtual void UpdateMVP(const GameTimer& gt) = 0;
 
+
+public:
+	virtual Buffer* CreateBuffer(FRenderResource* renderResource) = 0;
 };

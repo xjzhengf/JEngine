@@ -111,6 +111,12 @@
     <ClCompile Include="FTexture.cpp">
       <Filter>RHI\Source</Filter>
     </ClCompile>
+    <ClCompile Include="FDynamicRHI.cpp">
+      <Filter>RHI\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FRenderResource.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
     <ClCompile Include="DXRHIResource.cpp">
       <Filter>RHI\Source</Filter>
     </ClCompile>
@@ -167,7 +173,7 @@
     <ClInclude Include="TaskManager.h">
       <Filter>Manager\Header</Filter>
     </ClInclude>
-    <ClInclude Include="RHI.h">
+    <ClInclude Include="FDynamicRHI.h">
       <Filter>RHI\Header</Filter>
     </ClInclude>
     <ClInclude Include="DX12RHI.h">
@@ -184,6 +190,12 @@
     </ClInclude>
     <ClInclude Include="FTexture.h">
       <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FRenderResource.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferView.h">
+      <Filter>Rander\Header</Filter>
     </ClInclude>
     <ClInclude Include="DXRHIResource.h">
       <Filter>RHI\Header</Filter>

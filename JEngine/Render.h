@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
-#include "RHI.h"
+#include "FDynamicRHI.h"
+#include "FRenderResource.h"
 class FRender {
 public:
 	bool Init();
@@ -9,6 +10,6 @@ public:
 	
 	~FRender();
 private:
-	std::unique_ptr<FRHI> mRHI = nullptr;
-	std::unique_ptr<FRHIResource> mRHIResource = nullptr;
+	std::unique_ptr<FDynamicRHI> mRHI = nullptr;
+	std::unique_ptr<FRenderResource> mRenderResource = nullptr;
 };

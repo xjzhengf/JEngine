@@ -5,9 +5,9 @@
 #define _CRTDBG_MAP_ALLOC
 
 #endif
-#include "RHI.h"
+#include "FDynamicRHI.h"
 #include "UploadBuffer.h"
-#include "DXRHIResource.h"
+#include "BufferView.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -16,19 +16,7 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
-struct Vertex
-{
-	glm::vec3 Pos;
-	XMFLOAT4 Color;
-	glm::vec3 Normal;
-	glm::vec2 TexC;
-};
-struct MeshData
-{
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-	
-};
+
 struct ObjectConstants {
 	//XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
 	glm::mat4x4 WorldViewProj = glm::identity<glm::mat4x4>();
@@ -39,7 +27,7 @@ struct ObjectConstants {
 	float Time = 0.0f;
 };
 
-class DX12RHI  :public FRHI{
+class DX12RHI  :public FDynamicRHI {
 public:
 	DX12RHI();
 	DX12RHI(const DX12RHI& sm) = delete;
@@ -68,8 +56,6 @@ private:
 	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);
 	void BuildStaticMeshData(StaticMeshInfo* myStruct);
 	void BuildPSO();
-
-
 public:
 	//override RHI
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
@@ -82,18 +68,21 @@ public:
 	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)override;
 	virtual void SetDescriptorHeaps(int index) override;
 	virtual void SetGraphicsRootSignature() override;
-	virtual void IASetVertexBuffers() override;
-	virtual void IASetIndexBuffer() override;
+	virtual void IASetVertexBuffers(Buffer* buffer) override;
+	virtual void IASetIndexBuffer(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
 	virtual void Offset(int index) override;
 	virtual void SetGraphicsRootDescriptorTable(int index) override;
 	virtual void SetGraphicsRoot32BitConstants() override;
 	virtual void DrawIndexedInstanced(int index) override;
-	virtual void LoadTexture(FRHIResource* TextureResource) override;
+	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void Update(const GameTimer& gt) override;
+	virtual void UpdateMVP(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
 	virtual void DrawPrepare() override;
+
+public:
+	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -112,6 +101,8 @@ private:
 	std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
+	std::unique_ptr<DXBuffer> mGeo = nullptr;
+
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
@@ -124,7 +115,7 @@ private:
 
 	POINT mLastMousePos;
 
-	std::vector<MeshData> meshDataVector;
+	/*std::vector<MeshData> meshDataVector;*/
 
 	float Time;
 

@@ -1,12 +1,14 @@
 #pragma once
 #include "stdafx.h"
-#include "RHIResource.h"
+#include "FRenderResource.h"
 
-class FTexture : public FRHIResource {
+class FTexture : public FRenderResource {
 public:
-	virtual void SetResoureInMap(std::string name)override;
+	FTexture();
+	virtual void ReleaseResource()override;
 	std::string Name;
 	std::wstring FilePath;
 private:
-	std::shared_ptr<FTexture> mFTexture;
+	FTexture* mFTexture;
 };
+

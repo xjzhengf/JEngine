@@ -172,7 +172,7 @@ void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12RHI::Update(const GameTimer& gt)
+void DX12RHI::UpdateMVP(const GameTimer& gt)
 {
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
@@ -224,10 +224,6 @@ void DX12RHI::Draw(const GameTimer& gt)
 	//mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	//mCommandList->OMSetStencilRef(0);
 	//mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
-	
-
-
 		
 	//for (int i = 0 ; i< meshDataVector.size();i++)
 	//{
@@ -267,19 +263,88 @@ void DX12RHI::DrawPrepare()
 	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*ActorPair.second);
-		BuildStaticMeshData(MeshInfo);
 		BulidDescriptorHeaps(i);
 		BulidConstantBuffers(i);
 		BuildShaderResourceView(i,MeshInfo->StaticMeshName);
 		i++;
 	}
 
-	BuildStaticMeshGeometry(meshDataVector);
+	//BuildStaticMeshGeometry(meshDataVector);
 	BuildPSO();
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 	FlushCommandQueue();
+}
+
+Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
+{
+	if (!renderResource->mRenderUpdate) {
+		return mGeo.get();
+	}
+	//将模型数据数组里的数据合并为一个大数据
+	std::vector<MeshData>meshData = renderResource->BuildMeshData();
+	size_t totalVertexSize = 0;
+	size_t totalIndexSize = 0;
+	std::vector<size_t> vertexOffset(meshData.size());
+	std::vector<size_t> indexOffset(meshData.size());
+	for (size_t i = 0; i < meshData.size(); i++) {
+		if (i == 0) {
+			vertexOffset[i] = 0;
+			indexOffset[i] = 0;
+		}
+		else
+		{
+			vertexOffset[i] = meshData[i - 1].vertices.size() + vertexOffset[i - 1];
+			indexOffset[i] = meshData[i - 1].indices.size() + indexOffset[i - 1];
+		}
+	}
+	std::vector<Vertex> vertices(totalVertexSize);
+	std::vector<uint32_t> indices(totalIndexSize);
+	for (size_t i = 0; i < meshData.size(); i++) {
+
+
+		for (size_t k = 0; k < meshData[i].vertices.size(); k++)
+		{
+			vertices.push_back(meshData[i].vertices[k]);
+		}
+		for (size_t k = 0; k < meshData[i].indices.size(); k++)
+		{
+			indices.push_back(meshData[i].indices[k]);
+		}
+	}
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(uint32_t);
+
+	mGeo = std::make_unique<DXBuffer>();
+	mGeo->Name = "DX12RHI";
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &mGeo->VertexBufferCPU));
+	CopyMemory(mGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &mGeo->IndexBufferCPU));
+	CopyMemory(mGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	mGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), vertices.data(), vbByteSize, mGeo->VertexBufferUploader);
+	mGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), indices.data(), ibByteSize, mGeo->IndexBufferUploader);
+
+	mGeo->VertexByteStride = sizeof(Vertex);
+	mGeo->VertexBufferByteSize = vbByteSize;
+	mGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
+	mGeo->IndexBufferByteSize = ibByteSize;
+
+
+
+	for (int i = 0; i < meshData.size(); i++) {
+		totalVertexSize += meshData[i].vertices.size();
+		totalIndexSize += meshData[i].indices.size();
+		SubmeshGeometry submesh;
+		submesh.IndexCount = (UINT)meshData[i].indices.size();
+		submesh.StartIndexLocation = indexOffset[i];
+		submesh.BaseVertexLocation = vertexOffset[i];
+		std::string name = std::to_string(i);
+		mGeo->DrawArgs[name] = submesh;
+	}
+	return mGeo.get();
 }
 
 
@@ -310,7 +375,6 @@ void DX12RHI::BulidConstantBuffers(int index)
 
 void DX12RHI::BuildShaderResourceView(int index,const std::string& Name)
 {
-		//获取偏移
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	std::string ResourceName;
@@ -346,7 +410,7 @@ void DX12RHI::BuildShaderResourceView(int index,const std::string& Name)
 		woodCrateNormal = mTextures[ResourceName]->Resource;
 	}
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.Format = woodCrateNormal->GetDesc().Format;
@@ -430,6 +494,7 @@ void DX12RHI::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
 	mBoxGeo->IndexBufferByteSize = ibByteSize;
 
 
+
 	for (int i = 0; i < meshData.size(); i++) {
 		totalVertexSize += meshData[i].vertices.size();
 		totalIndexSize += meshData[i].indices.size();
@@ -442,47 +507,47 @@ void DX12RHI::BuildStaticMeshGeometry(std::vector<MeshData> meshData)
 	}
 }
 
-void DX12RHI::BuildStaticMeshData(StaticMeshInfo* myStruct)
-{
-	MeshData meshData;
-	meshData.indices = myStruct->Indices;
-
-	meshData.indices.resize(myStruct->Indices.size());
-	size_t VerticesLen = myStruct->Vertices.size();
-	meshData.vertices.resize(VerticesLen);
-	for (int i = 0; i < VerticesLen; i++) {
-		meshData.vertices[i].Pos.x = myStruct->Vertices[i].x;
-		meshData.vertices[i].Pos.y = myStruct->Vertices[i].y;
-		meshData.vertices[i].Pos.z = myStruct->Vertices[i].z;
-		meshData.vertices[i].TexC.x = myStruct->UV[i].x;
-		meshData.vertices[i].TexC.y = myStruct->UV[i].y;
-
-	}
-
-	for (size_t i = 0; i < (myStruct->Indices.size()) / 3; i++) {
-		UINT i0 = meshData.indices[i * 3 + 0];
-		UINT i1 = meshData.indices[i * 3 + 1];
-		UINT i2 = meshData.indices[i * 3 + 2];
-
-		Vertex v0 = meshData.vertices[i0];
-		Vertex v1 = meshData.vertices[i1];
-		Vertex v2 = meshData.vertices[i2];
-
-		glm::vec3 e0 = v1.Pos - v0.Pos;
-		glm::vec3 e1 = v2.Pos - v0.Pos;
-		glm::vec3 faceNormal = glm::cross(e0, e1);
-
-		meshData.vertices[i0].Normal += faceNormal;
-		meshData.vertices[i1].Normal += faceNormal;
-		meshData.vertices[i2].Normal += faceNormal;
-	}
-
-	for (UINT i = 0; i < VerticesLen; i++)
-	{
-		meshData.vertices[i].Normal = glm::normalize(meshData.vertices[i].Normal);
-	}
-	meshDataVector.push_back(std::move(meshData));
-}
+//void DX12RHI::BuildStaticMeshData(StaticMeshInfo* myStruct)
+//{
+//	MeshData meshData;
+//	meshData.indices = myStruct->Indices;
+//
+//	meshData.indices.resize(myStruct->Indices.size());
+//	size_t VerticesLen = myStruct->Vertices.size();
+//	meshData.vertices.resize(VerticesLen);
+//	for (int i = 0; i < VerticesLen; i++) {
+//		meshData.vertices[i].Pos.x = myStruct->Vertices[i].x;
+//		meshData.vertices[i].Pos.y = myStruct->Vertices[i].y;
+//		meshData.vertices[i].Pos.z = myStruct->Vertices[i].z;
+//		meshData.vertices[i].TexC.x = myStruct->UV[i].x;
+//		meshData.vertices[i].TexC.y = myStruct->UV[i].y;
+//
+//	}
+//
+//	for (size_t i = 0; i < (myStruct->Indices.size()) / 3; i++) {
+//		UINT i0 = meshData.indices[i * 3 + 0];
+//		UINT i1 = meshData.indices[i * 3 + 1];
+//		UINT i2 = meshData.indices[i * 3 + 2];
+//
+//		Vertex v0 = meshData.vertices[i0];
+//		Vertex v1 = meshData.vertices[i1];
+//		Vertex v2 = meshData.vertices[i2];
+//
+//		glm::vec3 e0 = v1.Pos - v0.Pos;
+//		glm::vec3 e1 = v2.Pos - v0.Pos;
+//		glm::vec3 faceNormal = glm::cross(e0, e1);
+//
+//		meshData.vertices[i0].Normal += faceNormal;
+//		meshData.vertices[i1].Normal += faceNormal;
+//		meshData.vertices[i2].Normal += faceNormal;
+//	}
+//
+//	for (UINT i = 0; i < VerticesLen; i++)
+//	{
+//		meshData.vertices[i].Normal = glm::normalize(meshData.vertices[i].Normal);
+//	}
+//	meshDataVector.push_back(std::move(meshData));
+//}
 
 void DX12RHI::BuildPSO()
 {
@@ -538,7 +603,7 @@ void DX12RHI::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
 }
 
-void DX12RHI::LoadTexture(FRHIResource* TextureResource)
+void DX12RHI::LoadTexture(FTexture* TextureResource)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
@@ -628,14 +693,17 @@ void DX12RHI::SetGraphicsRootSignature()
 	mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
 }
 
-void DX12RHI::IASetVertexBuffers()
+void DX12RHI::IASetVertexBuffers(Buffer* buffer)
 {
-	mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
+	auto dxBuffer = dynamic_cast<DXBuffer*>(buffer);
+	
+	mCommandList->IASetVertexBuffers(0, 1, &dxBuffer->VertexBufferView());
 }
 
-void DX12RHI::IASetIndexBuffer()
+void DX12RHI::IASetIndexBuffer(Buffer* buffer)
 {
-	mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
+	auto dxBuffer = dynamic_cast<DXBuffer*>(buffer);
+	mCommandList->IASetIndexBuffer(&dxBuffer->IndexBufferView());
 }
 
 void DX12RHI::IASetPrimitiveTopology()
@@ -664,8 +732,8 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 
 void DX12RHI::DrawIndexedInstanced(int index)
 {
-	mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs[std::to_string(index)].IndexCount, 1,
-		(UINT)mBoxGeo->DrawArgs[std::to_string(index)].StartIndexLocation, (UINT)mBoxGeo->DrawArgs[std::to_string(index)].BaseVertexLocation, 0);
+	mCommandList->DrawIndexedInstanced(mGeo->DrawArgs[std::to_string(index)].IndexCount, 1,
+		(UINT)mGeo->DrawArgs[std::to_string(index)].StartIndexLocation, (UINT)mGeo->DrawArgs[std::to_string(index)].BaseVertexLocation, 0);
 
 }
 
