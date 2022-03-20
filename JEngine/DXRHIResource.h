@@ -3,8 +3,14 @@
 #include "RHIResource.h"
 class DXRHIResource : public FRHIResource {
 public:
-
-	
+	virtual void CreateShader()override;
+	virtual void Release() override {};
+	D3D12_CPU_DESCRIPTOR_HANDLE BackBufferView();
+    void BuildPSO();
+	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
+	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 };
 
 enum DX_RESOURCE_STATES

@@ -120,6 +120,12 @@
     <ClCompile Include="DXRHIResource.cpp">
       <Filter>RHI\Source</Filter>
     </ClCompile>
+    <ClCompile Include="FRHIFactory.cpp">
+      <Filter>RHI\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FSceneRender.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -194,11 +200,17 @@
     <ClInclude Include="FRenderResource.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
-    <ClInclude Include="BufferView.h">
+    <ClInclude Include="Buffer.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
     <ClInclude Include="DXRHIResource.h">
       <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FRHIFactory.h">
+      <Filter>RHI\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FSceneRender.h">
+      <Filter>Rander\Header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

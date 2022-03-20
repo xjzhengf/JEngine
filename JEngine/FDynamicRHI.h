@@ -2,15 +2,19 @@
 #include "stdafx.h"
 #include "RHIResource.h"
 #include "FTexture.h"
-#include "BufferView.h"
+#include "Buffer.h"
 class FDynamicRHI
 {
 public:
+	FDynamicRHI();
 	virtual ~FDynamicRHI() {};
-	static FDynamicRHI* GetRHI();
-	static FDynamicRHI* mFDynamicRHI;
+	FDynamicRHI* GetRHI();
+	void DestroyRHI();
+	static FDynamicRHI* mRHI;
 public:
 	virtual bool Initialize() = 0;
+
+	virtual void BuildPSO(FRHIResource* RHIResource) = 0;
 
 	virtual void ResetCommand() = 0;
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) = 0;

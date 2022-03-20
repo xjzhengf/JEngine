@@ -7,7 +7,7 @@
 #endif
 #include "FDynamicRHI.h"
 #include "UploadBuffer.h"
-#include "BufferView.h"
+#include "Buffer.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -46,16 +46,14 @@ public:
 	void SetClientWidht(int Width);
 	void SetClientHeight(int Height);
 	ID3D12Resource* CurrentBackBuffer()const;
-		D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
 	void BulidDescriptorHeaps(int index);
 	void BulidConstantBuffers(int index);
 	void BuildShaderResourceView(int index, const std::string& Name);
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
-	void BuildStaticMeshGeometry(std::vector<MeshData> meshData);
-	void BuildStaticMeshData(StaticMeshInfo* myStruct);
-	void BuildPSO();
+	void BuildPSO(FRHIResource* RHIResource) override;
 public:
 	//override RHI
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
@@ -95,7 +93,7 @@ protected:
 
 	glm::vec3 cameraLoc;
 private:
-	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
+
 	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 	std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
@@ -105,10 +103,16 @@ private:
 
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
+
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	
+	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
+	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	bool m4xMsaaState = false;
+	UINT m4xMsaaQuality = 0;
+
 	ComPtr<ID3D12PipelineState> mPSO = nullptr;
 
 	glm::mat4x4 mWorld = glm::identity<glm::mat4x4>();
@@ -133,8 +137,7 @@ protected:
 	void LogAdapters();
 	void LogAdapterOutputs(IDXGIAdapter* adapter);
 	void LogOutputDisplayerModes(IDXGIOutput* output, DXGI_FORMAT format);
-	bool m4xMsaaState = false;
-	UINT m4xMsaaQuality = 0;
+
 	Microsoft::WRL::ComPtr<IDXGIFactory4> mdxgiFactory;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 	Microsoft::WRL::ComPtr<ID3D12Device> md3dDevice;
@@ -163,8 +166,8 @@ protected:
 
 	std::wstring mMainWndCaption = L"D3D App";
 	D3D_DRIVER_TYPE md3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
-	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+
 	int mClientWidht = 800;
 	int mClientHeight = 600;
 };

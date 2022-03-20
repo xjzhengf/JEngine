@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include "Render.h"
-#include "DX12RHI.h"
 #include "DXRHIResource.h"
 #include "Engine.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
 bool FRender::Init()
 {
-	mRHI = std::make_unique<DX12RHI>();
+	RHIFactory = std::make_unique<FRHIFactory>();
+	mRHI = RHIFactory->CreateRHI();
+	mRHIResource = RHIFactory->CreateRHIResource();
 	mRenderResource = std::make_unique<FRenderResource>();
 	if (!mRHI->Initialize()) {
 		return false;
@@ -22,6 +23,8 @@ void FRender::RenderBegin()
 	}
 	
 	mRHI->DrawPrepare();
+	mRHI->BuildPSO(mRHIResource.get());
+	mRHI->ExecuteCommandLists();
 }
 
 void FRender::Render(const GameTimer& gt)
