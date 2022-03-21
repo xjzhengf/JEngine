@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 extern const int gNumFrameResources;
-class Material {
+class FMaterial {
 public:
 	// Unique material name for lookup.
 	std::string Name;
@@ -23,7 +23,7 @@ public:
 	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
 };
 
-struct MaterialConstants
+struct FMaterialConstants
 {
 	glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glm::vec3 FresnelR0 = { 0.01f, 0.01f, 0.01f };

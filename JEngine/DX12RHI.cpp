@@ -19,6 +19,7 @@ DX12RHI::DX12RHI()
 
 DX12RHI::~DX12RHI()
 {
+
 	if (mBoxGeo!= nullptr)
 	{
 		mBoxGeo = nullptr;

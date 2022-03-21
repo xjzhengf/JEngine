@@ -215,6 +215,9 @@
     <ClInclude Include="Material.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
+    <ClInclude Include="RenderItem.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">

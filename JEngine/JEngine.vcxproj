@@ -195,6 +195,7 @@
     <ClInclude Include="MeshProperty.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="FDynamicRHI.h" />
+    <ClInclude Include="RenderItem.h" />
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="stdafx.h" />
