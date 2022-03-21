@@ -190,6 +190,7 @@
     <ClInclude Include="FTexture.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="LauncherPCWindow.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="MeshProperty.h" />
     <ClInclude Include="Render.h" />

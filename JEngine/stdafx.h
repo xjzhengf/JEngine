@@ -39,8 +39,7 @@
 #include"iostream"
 #include "vector"
 #include "GameTimer.h"
-
-#include "GameTimer.h"
+#include "Buffer.h"
 #include "MathHelper.h"
 #include "MeshProperty.h"
 #include "D3DUtil.h"

@@ -212,6 +212,9 @@
     <ClInclude Include="FSceneRender.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">

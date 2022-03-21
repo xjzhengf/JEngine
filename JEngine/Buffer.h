@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "FRenderResource.h"
+#include "D3DUtil.h"
 class Buffer : public FRenderResource{
 public:
 };
