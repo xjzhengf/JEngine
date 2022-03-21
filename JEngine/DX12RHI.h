@@ -48,9 +48,10 @@ public:
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
-	void BulidDescriptorHeaps(int index);
-	void BulidConstantBuffers(int index);
-	void BuildShaderResourceView(int index, const std::string& Name);
+	void BulidDescriptorHeaps(std::string Name);
+	void BulidConstantBuffers(std::string Name);
+	void BuildMaterial();
+	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name);
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
 	void BuildPSO(FRHIResource* RHIResource) override;
@@ -64,15 +65,15 @@ public:
 	virtual void ClearDepthStencilView() override;
 	virtual void OMSetStencilRef(int StencilRef) override;
 	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)override;
-	virtual void SetDescriptorHeaps(int index) override;
+	virtual void SetDescriptorHeaps(std::string Name) override;
 	virtual void SetGraphicsRootSignature() override;
 	virtual void IASetVertexBuffers(Buffer* buffer) override;
 	virtual void IASetIndexBuffer(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
-	virtual void Offset(int index) override;
-	virtual void SetGraphicsRootDescriptorTable(int index) override;
+	virtual void Offset(std::string Name) override;
+	virtual void SetGraphicsRootDescriptorTable(std::string Name) override;
 	virtual void SetGraphicsRoot32BitConstants() override;
-	virtual void DrawIndexedInstanced(int index) override;
+	virtual void DrawIndexedInstanced(std::string Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void UpdateMVP(const GameTimer& gt) override;
@@ -94,9 +95,11 @@ protected:
 	glm::vec3 cameraLoc;
 private:
 
-	std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
+	//std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
+	std::map<std::string, ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
-	std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
+	//std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
+	std::map<std::string,std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
 	std::unique_ptr<DXBuffer> mGeo = nullptr;

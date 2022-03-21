@@ -60,11 +60,11 @@ void GameLogic::ProcessKey()
 				Engine::GetEngine()->SetRuningState(false);
 			}
 			//ÔÝÊ±ÓÐbug
-			/*if (Key == VK_TAB)
-			{
-				if (LoadMap("StaticMeshInfo\\Map\\ThirdPersonMap2.txt"))
-					TaskManager::GetTaskManager()->UnRegisterKey(Key);
-			}*/
+			//if (Key == VK_TAB)
+			//{
+			//	if (LoadMap("StaticMeshInfo\\Map\\ThirdPersonMap2.txt"))
+			//		TaskManager::GetTaskManager()->UnRegisterKey(Key);
+			//}
 #else
 			
 #endif

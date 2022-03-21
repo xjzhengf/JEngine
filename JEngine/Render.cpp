@@ -21,7 +21,6 @@ void FRender::RenderBegin()
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
 		mRHI->LoadTexture(texture.get());
 	}
-	
 	mRHI->DrawPrepare();
 	mRHI->BuildPSO(mRHIResource.get());
 	mRHI->ExecuteCommandLists();
@@ -38,15 +37,17 @@ void FRender::Render(const GameTimer& gt)
 	mRHI->OMSetStencilRef(0);
 	mRHI->OMSetRenderTargets(1,true);
 
-	for (int i = 0; i < SceneManager::GetSceneManager()->GetAllActor().size(); i++) {
-		mRHI->SetDescriptorHeaps(i);
+
+	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
+	{
+		mRHI->SetDescriptorHeaps(Actor.first);
 		mRHI->SetGraphicsRootSignature();
 		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(i);
+		mRHI->SetGraphicsRootDescriptorTable(Actor.first);
 		mRHI->SetGraphicsRoot32BitConstants();
-		mRHI->DrawIndexedInstanced(i);
+		mRHI->DrawIndexedInstanced(Actor.first);
 	}
 	mRHI->ResourceBarrier(1, DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
 	mRHI->UpdateMVP(gt);

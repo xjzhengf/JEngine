@@ -27,6 +27,7 @@ DX12RHI::~DX12RHI()
 	if (mDX12RHI != nullptr) {
 		mDX12RHI = nullptr;
 	}
+
 }
 
 DX12RHI* DX12RHI::GetDX12RHI()
@@ -180,7 +181,6 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
 
-	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
@@ -211,8 +211,7 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		glm::mat4x4 W = objConstants.Translate * objConstants.Rotation * objConstants.Scale;
 		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
-		mObjectCB[i]->CopyData(0, objConstants);
-		i++;
+		mObjectCB[ActorPair.first]->CopyData(0, objConstants);
 	}
 }
 
@@ -228,14 +227,12 @@ void DX12RHI::DrawPrepare()
 	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
 	BulidShadersAndInputLayout();
 	BulidRootSignature();
-	mCbvSrvHeap.resize(SceneSize);
-	mObjectCB.resize(SceneSize);
 	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*ActorPair.second);
-		BulidDescriptorHeaps(i);
-		BulidConstantBuffers(i);
-		BuildShaderResourceView(i,MeshInfo->StaticMeshName);
+		BulidDescriptorHeaps(ActorPair.first);
+		BulidConstantBuffers(ActorPair.first);
+		BuildShaderResourceView(ActorPair.first,MeshInfo->StaticMeshName);
 		i++;
 	}
 }
@@ -246,6 +243,7 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	if (!sceneResource->mRenderUpdate) {
 		return mGeo.get();
 	}
+	
 	//将模型数据数组里的数据合并为一个大数据
 	std::vector<MeshData>meshData = sceneResource->BuildMeshData();
 	size_t totalVertexSize = 0;
@@ -281,6 +279,7 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(uint32_t);
 
 	mGeo = std::make_unique<DXBuffer>();
+	
 	mGeo->Name = "DX12RHI";
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &mGeo->VertexBufferCPU));
 	CopyMemory(mGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
@@ -295,51 +294,54 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	mGeo->VertexBufferByteSize = vbByteSize;
 	mGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
 	mGeo->IndexBufferByteSize = ibByteSize;
-
-
-
-	for (int i = 0; i < meshData.size(); i++) {
+	int i = 0;
+	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		totalVertexSize += meshData[i].vertices.size();
 		totalIndexSize += meshData[i].indices.size();
 		SubmeshGeometry submesh;
 		submesh.IndexCount = (UINT)meshData[i].indices.size();
 		submesh.StartIndexLocation = indexOffset[i];
 		submesh.BaseVertexLocation = vertexOffset[i];
-		std::string name = std::to_string(i);
-		mGeo->DrawArgs[name] = submesh;
+		mGeo->DrawArgs[ActorPair.first] = submesh;
+		i++;
 	}
 	return mGeo.get();
 }
 
 
-void DX12RHI::BulidDescriptorHeaps(int index)
+void DX12RHI::BulidDescriptorHeaps(std::string Name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = 3;
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[index])));
+	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[Name])));
 }
 
-void DX12RHI::BulidConstantBuffers(int index)
+void DX12RHI::BulidConstantBuffers(std::string Name)
 {
-	mObjectCB[index] = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
+	mObjectCB[Name] = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
 	UINT objecBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB[index]->Resource()->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB[Name]->Resource()->GetGPUVirtualAddress();
 	int boxCBufIndex = 0;
 	cbAddress += boxCBufIndex * objecBByteSize;
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 	cbvDesc.BufferLocation = cbAddress;
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
+	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvSrvHeap[Name]->GetCPUDescriptorHandleForHeapStart());
 
 }
 
-void DX12RHI::BuildShaderResourceView(int index,const std::string& Name)
+void DX12RHI::BuildMaterial()
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetCPUDescriptorHandleForHeapStart());
+
+}
+
+void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name)
+{
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[ActorName]->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	std::string ResourceName;
 
@@ -498,9 +500,9 @@ void DX12RHI::OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleT
 	mCommandList->OMSetRenderTargets(numTatgetDescriptors, &CurrentBackBufferView(), RTsSingleHandleToDescriptorRange, &DepthStencilView());
 }
 
-void DX12RHI::SetDescriptorHeaps(int index)
+void DX12RHI::SetDescriptorHeaps(std::string Name)
 {
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[index].Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[Name].Get() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 
@@ -527,17 +529,17 @@ void DX12RHI::IASetPrimitiveTopology()
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void DX12RHI::Offset(int index)
+void DX12RHI::Offset(std::string Name)
 {
-	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 }
 
-void DX12RHI::SetGraphicsRootDescriptorTable(int index)
+void DX12RHI::SetGraphicsRootDescriptorTable(std::string Name)
 {
-	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[index]->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
 }
 
@@ -546,10 +548,10 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
 }
 
-void DX12RHI::DrawIndexedInstanced(int index)
+void DX12RHI::DrawIndexedInstanced(std::string Name)
 {
-	mCommandList->DrawIndexedInstanced(mGeo->DrawArgs[std::to_string(index)].IndexCount, 1,
-		(UINT)mGeo->DrawArgs[std::to_string(index)].StartIndexLocation, (UINT)mGeo->DrawArgs[std::to_string(index)].BaseVertexLocation, 0);
+	mCommandList->DrawIndexedInstanced(mGeo->DrawArgs[Name].IndexCount, 1,
+		(UINT)mGeo->DrawArgs[Name].StartIndexLocation, (UINT)mGeo->DrawArgs[Name].BaseVertexLocation, 0);
 
 }
 

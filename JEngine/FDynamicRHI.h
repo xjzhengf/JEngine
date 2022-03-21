@@ -24,15 +24,15 @@ public:
 	virtual void ClearDepthStencilView() = 0;
 	virtual void OMSetStencilRef(int StencilRef) = 0;
 	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange) = 0;
-	virtual void SetDescriptorHeaps(int index) = 0;
+	virtual void SetDescriptorHeaps(std::string Name) = 0;
 	virtual void SetGraphicsRootSignature() = 0;
 	virtual void IASetVertexBuffers(Buffer* buffer) = 0;
 	virtual void IASetIndexBuffer(Buffer* buffer) = 0;
 	virtual void IASetPrimitiveTopology() = 0;
-	virtual void Offset(int index) = 0;
-	virtual void SetGraphicsRootDescriptorTable(int index) {};
+	virtual void Offset(std::string Name) = 0;
+	virtual void SetGraphicsRootDescriptorTable(std::string Name) {};
 	virtual void SetGraphicsRoot32BitConstants() = 0;
-	virtual void DrawIndexedInstanced(int index) = 0;
+	virtual void DrawIndexedInstanced(std::string Name) = 0;
 	virtual void ExecuteCommandLists() = 0;
 
 	virtual void DrawPrepare() = 0;

@@ -2,7 +2,7 @@
 #include "FSceneRender.h"
 #include "AssetManager.h"
 #include "SceneManager.h"
-
+const int gNumFrameResources = 3;
 std::vector<MeshData> FSceneRender::meshDataVector;
 std::vector<MeshData>& FSceneRender::BuildMeshData()
 {
@@ -13,7 +13,6 @@ std::vector<MeshData>& FSceneRender::BuildMeshData()
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		StaticMeshInfo* myStruct = AssetManager::GetAssetManager()->FindAssetByActor(*Actor.second);
-
 		MeshData meshData;
 		meshData.indices = myStruct->Indices;
 
@@ -56,3 +55,17 @@ std::vector<MeshData>& FSceneRender::BuildMeshData()
 	mRenderUpdate = false;
 	return meshDataVector;
 }
+
+void FSceneRender::BuildMaterial()
+{
+	auto grass = std::make_unique<FMaterial>();
+	grass->Name = "Grass";
+	grass->MatCBIndex = 0;
+	grass->DiffuseAlbedo = glm::vec4(0.2f,0.6f,0.2f,1.0f);
+	grass->FresnelR0 = glm::vec3(0.01f, 0.01f, 0.01f);
+	grass->Roughness = 0.125f;
+
+	mMaterials["Grass"] = std::move(grass);
+}
+
+
