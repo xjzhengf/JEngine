@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "AssetManager.h"
 #include"FirstPersonCamera.h"
+
 SceneManager* SceneManager::mSceneManager = nullptr;
 SceneManager* SceneManager::GetSceneManager()
 {
@@ -20,6 +21,7 @@ SceneManager::~SceneManager()
 	if (mSceneManager != nullptr) {
 		 mSceneManager = nullptr;
 	}
+
 	for (auto&& data : Actors)
 	{
 		if (data.second != nullptr) {
@@ -117,4 +119,22 @@ void SceneManager::ReadBinaryFileToActorStruct(const char* TextPathName)
 		}
 	}
 	Actors.insert({ actor->ActorName,actor });
+}
+
+bool SceneManager::ReadBinaryFileToDirectionalLight(const char* TextPathName)
+{
+	std::ifstream inFile(TextPathName, std::ios::binary);
+	if (inFile.is_open()) {
+
+		inFile.read((char*)&DirectionalLight.Brightness,sizeof(float));
+
+		inFile.read((char*)&DirectionalLight.Direction, sizeof(glm::vec3));
+		inFile.read((char*)&DirectionalLight.Location, sizeof(glm::vec4));
+	}
+	else
+	{
+		return false;
+	}
+	inFile.close();
+	return true;
 }

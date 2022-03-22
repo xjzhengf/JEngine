@@ -20,6 +20,7 @@ GameLogic::~GameLogic()
 void GameLogic::Init()
 {
 	LoadMap("..\\JEngine\\StaticMeshInfo\\Map\\ThirdPersonMap.txt");
+	LoadLight("..\\JEngine\\StaticMeshInfo\\Light\\LightSource_0.dat");
 }
 
 void GameLogic::Update()
@@ -42,6 +43,14 @@ bool GameLogic::LoadMap(const std::string& PathName)
 	if (Engine::GetEngine()->GetSceneManager()->LoadMap(PathName.c_str())) {
 		//LoadTexture
 		Engine::GetEngine()->GetAssetManager()->LoadTexture();
+		return true;
+	}
+	return false;
+}
+
+bool GameLogic::LoadLight(const std::string& PathName)
+{
+	if (Engine::GetEngine()->GetSceneManager()->ReadBinaryFileToDirectionalLight(PathName.c_str())) {
 		return true;
 	}
 	return false;

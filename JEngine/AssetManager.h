@@ -14,6 +14,7 @@ public:
 
 	StaticMeshInfo* FindAssetByActor(ActorStruct& actor);
 	void LoadTexture();
+
 	void SelectFile();
 	std::unordered_map<std::string, StaticMeshInfo*>& GetMeshAsset();
 	std::vector<std::shared_ptr<FTexture>>& GetTextures();

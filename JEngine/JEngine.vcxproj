@@ -183,6 +183,7 @@
     <ClInclude Include="DX12RHI.h" />
     <ClInclude Include="DXRHIResource.h" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="FDirectionalLightProperty.h" />
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="FRenderResource.h" />
     <ClInclude Include="FRHIFactory.h" />

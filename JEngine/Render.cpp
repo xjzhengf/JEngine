@@ -22,13 +22,13 @@ void FRender::RenderBegin()
 		mRHI->LoadTexture(texture.get());
 	}
 	mRHI->DrawPrepare();
-	mRHI->BuildPSO(mRHIResource.get());
+	mRHI->BuildPSO(mRHIResource.get(),"Scene");
 	mRHI->ExecuteCommandLists();
 }
 
 void FRender::Render(const GameTimer& gt)
 {
-	mRHI->ResetCommand();
+	mRHI->ResetCommand("Scene");
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	mRHI->ResourceBarrier(1, DX_RESOURCE_STATES::PRESENT,DX_RESOURCE_STATES::RENDER_TARGET);

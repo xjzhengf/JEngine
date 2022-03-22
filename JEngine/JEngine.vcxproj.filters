@@ -218,6 +218,9 @@
     <ClInclude Include="RenderItem.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
+    <ClInclude Include="FDirectionalLightProperty.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">

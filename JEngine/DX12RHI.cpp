@@ -264,8 +264,6 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	std::vector<Vertex> vertices(totalVertexSize);
 	std::vector<uint32_t> indices(totalIndexSize);
 	for (size_t i = 0; i < meshData.size(); i++) {
-
-
 		for (size_t k = 0; k < meshData[i].vertices.size(); k++)
 		{
 			vertices.push_back(meshData[i].vertices[k]);
@@ -308,8 +306,51 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	return mGeo.get();
 }
 
+void DX12RHI::CreateResoure(FRHIResource* RHIResource)
+{
+	D3D12_RESOURCE_DESC depthStencilDesc;
+	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Alignment = 0;
+	depthStencilDesc.Width = mClientWidht;
+	depthStencilDesc.Height = mClientHeight;
+	depthStencilDesc.DepthOrArraySize = 1;
+	depthStencilDesc.MipLevels = 1;
 
-void DX12RHI::BulidDescriptorHeaps(std::string Name)
+	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+
+	depthStencilDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	depthStencilDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE optClear;
+	optClear.Format = mDepthStencilFormat;
+	optClear.DepthStencil.Depth = 1.0f;
+	optClear.DepthStencil.Stencil = 0;
+	//Device创建CommittedResource
+	ThrowIfFailed(md3dDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&depthStencilDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		&optClear,
+		IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
+
+
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Format = mDepthStencilFormat;
+	dsvDesc.Texture2D.MipSlice = 0;
+	//Device创建DepthStencilView
+	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
+
+
+}
+
+
+void DX12RHI::BulidDescriptorHeaps(const std::string& Name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = 3;
@@ -319,7 +360,7 @@ void DX12RHI::BulidDescriptorHeaps(std::string Name)
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[Name])));
 }
 
-void DX12RHI::BulidConstantBuffers(std::string Name)
+void DX12RHI::BulidConstantBuffers(const std::string& Name)
 {
 	mObjectCB[Name] = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
 	UINT objecBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
@@ -334,8 +375,10 @@ void DX12RHI::BulidConstantBuffers(std::string Name)
 
 }
 
-void DX12RHI::BuildMaterial()
+void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResource)
 {
+	//mMaterialCB[Name] = std::make_unique<UploadBuffer<FMaterial>>(md3dDevice.Get(),1, true);
+	//UINT matBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(FMaterial));
 
 }
 
@@ -409,7 +452,7 @@ void DX12RHI::BulidShadersAndInputLayout()
 
 
 
-void DX12RHI::BuildPSO(FRHIResource* RHIResource)
+void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOName)
 {
 	RHIResource->CreateShader();
 	auto dXRHIResource = dynamic_cast<DXRHIResource*>(RHIResource);
@@ -419,7 +462,7 @@ void DX12RHI::BuildPSO(FRHIResource* RHIResource)
 	dXRHIResource->psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	dXRHIResource->psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	dXRHIResource->psoDesc.DSVFormat = mDepthStencilFormat;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&(dXRHIResource->psoDesc), IID_PPV_ARGS(&mPSO)));
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&(dXRHIResource->psoDesc), IID_PPV_ARGS(&mPSO[PSOName])));
 }
 
 void DX12RHI::LoadTexture(FTexture* TextureResource)
@@ -460,10 +503,10 @@ void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float 
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 }
 
-void DX12RHI::ResetCommand()
+void DX12RHI::ResetCommand(const std::string& PSOName)
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO[PSOName].Get()));
 }
 
 void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)

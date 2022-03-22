@@ -8,6 +8,7 @@
 #include "FDynamicRHI.h"
 #include "UploadBuffer.h"
 #include "Buffer.h"
+#include "Material.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -48,17 +49,17 @@ public:
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
-	void BulidDescriptorHeaps(std::string Name);
-	void BulidConstantBuffers(std::string Name);
-	void BuildMaterial();
+	void BulidDescriptorHeaps(const std::string& Name);
+	void BulidConstantBuffers(const std::string& Name);
+	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name);
 	void BulidRootSignature();
 	void BulidShadersAndInputLayout();
-	void BuildPSO(FRHIResource* RHIResource) override;
+	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
 public:
 	//override RHI
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
-	virtual void ResetCommand() override;
+	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, int stateBefore, int stateAfter) override;
 	virtual void ClearRenderTargetView() override;
@@ -82,6 +83,7 @@ public:
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
+	void CreateResoure(FRHIResource* RHIResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -95,11 +97,10 @@ protected:
 	glm::vec3 cameraLoc;
 private:
 
-	//std::vector < ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	std::map<std::string, ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
-	//std::vector<std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
+	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;
 	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
@@ -116,7 +117,7 @@ private:
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
 
-	ComPtr<ID3D12PipelineState> mPSO = nullptr;
+	std::unordered_map<std::string,ComPtr<ID3D12PipelineState>> mPSO ;
 
 	glm::mat4x4 mWorld = glm::identity<glm::mat4x4>();
 
@@ -159,6 +160,7 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mRtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mDsvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mSrvHeap;
 
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;

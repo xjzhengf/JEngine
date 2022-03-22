@@ -12,6 +12,7 @@ public:
 	void Destroy();
 	static GameLogic* GetGameLogic();
 	bool LoadMap(const std::string& PathName);
+	bool LoadLight(const std::string& PathName);
 protected:
 	static GameLogic* mGameLogic;
 private:

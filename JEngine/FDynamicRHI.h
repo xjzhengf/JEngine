@@ -14,9 +14,10 @@ public:
 public:
 	virtual bool Initialize() = 0;
 
-	virtual void BuildPSO(FRHIResource* RHIResource) = 0;
 
-	virtual void ResetCommand() = 0;
+	virtual void BuildPSO(FRHIResource* RHIResource, const std::string& PSOName) = 0;
+
+	virtual void ResetCommand(const std::string& PSOName) = 0;
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) = 0;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) = 0;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, int stateBefore, int stateAfter) {};
@@ -43,4 +44,5 @@ public:
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) = 0;
+	virtual void CreateResoure(FRHIResource* RHIResource) {};
 };

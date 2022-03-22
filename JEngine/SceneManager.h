@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "MeshProperty.h"
 #include "Camera.h"
+#include "FDirectionalLightProperty.h"
 class SceneManager {
 public:
 	static SceneManager* GetSceneManager();
@@ -12,11 +13,14 @@ public:
 	SceneManager& operator=(const SceneManager& sm) = delete;
 	void SetMapActors(const std::unordered_map<std::string, ActorStruct*>& Actors);
 	void ReadBinaryFileToActorStruct(const char* TextPathName);
+	bool ReadBinaryFileToDirectionalLight(const char* TextPathName);
 	void RemoveActor(const std::string& Name);
 	void AddActor( ActorStruct* Actor);
 	std::shared_ptr<Camera> GetCamera();
 	bool SceneManager::LoadMap(const char* MapPath);
 	std::unordered_map<std::string, ActorStruct*>& GetAllActor();
+
+	FDirectionalLight DirectionalLight;
 protected:
 	static SceneManager* mSceneManager;
 private:
