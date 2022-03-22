@@ -221,12 +221,11 @@ void DX12RHI::Draw(const GameTimer& gt)
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 }
 
-void DX12RHI::DrawPrepare()
+void DX12RHI::DrawPrepare(FRHIResource* resource)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
-	BulidShadersAndInputLayout();
-	BulidRootSignature();
+	BulidRootSignature(resource);
 	int i = 0;
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*ActorPair.second);
@@ -306,7 +305,7 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	return mGeo.get();
 }
 
-void DX12RHI::CreateResoure(FRHIResource* RHIResource)
+void DX12RHI::CreateResoure(FRHIResource* RHIResource, const std::string& Name)
 {
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -337,6 +336,14 @@ void DX12RHI::CreateResoure(FRHIResource* RHIResource)
 		IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
 
 
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	md3dDevice->CreateShaderResourceView(mShadowMap.Get(), &srvDesc, mCbvSrvHeap[Name]->GetCPUDescriptorHandleForHeapStart());
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
@@ -347,6 +354,11 @@ void DX12RHI::CreateResoure(FRHIResource* RHIResource)
 	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
 
 
+}
+
+void DX12RHI::CreateShader(FRHIResource* RHIResource, const std::wstring& filename)
+{
+	RHIResource->CreateShader(filename);
 }
 
 
@@ -391,12 +403,14 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	//消除虚幻导出的'\0'
 	std::string str(Name.c_str());
 	str.resize(str.size());
-
+	ComPtr<ID3D12Resource>  woodCrateNormal;
 	if (mTextures.find(str) == mTextures.end()) {
 		ResourceName = "Null";
+		woodCrateNormal = mTextures["Normal"]->Resource;
 	}
 	else {
 		ResourceName = str;
+		woodCrateNormal = mTextures[ResourceName]->Resource;
 	}
 	auto woodCrateTex = mTextures[ResourceName]->Resource;
 
@@ -408,15 +422,6 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	srvDesc.Texture2D.MipLevels = woodCrateTex->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	md3dDevice->CreateShaderResourceView(woodCrateTex.Get(), &srvDesc, hDescriptor);
-	ComPtr<ID3D12Resource>  woodCrateNormal;
-	if (ResourceName == "Null")
-	{
-		woodCrateNormal = mTextures["Normal"]->Resource;
-	}
-	else
-	{
-		woodCrateNormal = mTextures[ResourceName]->Resource;
-	}
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
@@ -431,37 +436,21 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 
 
 
-void DX12RHI::BulidRootSignature()
+void DX12RHI::BulidRootSignature(FRHIResource* resource)
 {
-	ThrowIfFailed(md3dDevice->CreateRootSignature(0, mvsByteCode->GetBufferPointer(), mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
-}
-void DX12RHI::BulidShadersAndInputLayout()
-{
-	HRESULT hr = S_OK;
-	mvsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mpsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
-
-	mInputLayout =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
+	
+	ThrowIfFailed(md3dDevice->CreateRootSignature(0, dynamic_cast<DXRHIResource*>(resource)->mvsByteCode->GetBufferPointer(), dynamic_cast<DXRHIResource*>(resource)->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
 
 
 
 void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOName)
 {
-	RHIResource->CreateShader();
 	auto dXRHIResource = dynamic_cast<DXRHIResource*>(RHIResource);
-	dXRHIResource->BuildPSO();
+	dXRHIResource->BuildPSO(PSOName);
 	dXRHIResource->psoDesc.pRootSignature = mRootSigmature.Get();
-	dXRHIResource->psoDesc.RTVFormats[0] = mBackBufferFormat;
 	dXRHIResource->psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	dXRHIResource->psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	dXRHIResource->psoDesc.DSVFormat = mDepthStencilFormat;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&(dXRHIResource->psoDesc), IID_PPV_ARGS(&mPSO[PSOName])));
 }
 

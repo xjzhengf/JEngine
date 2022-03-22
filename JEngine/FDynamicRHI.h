@@ -11,6 +11,8 @@ public:
 	FDynamicRHI* GetRHI();
 	void DestroyRHI();
 	static FDynamicRHI* mRHI;
+
+	bool IsRunDrawPrepare = true;
 public:
 	virtual bool Initialize() = 0;
 
@@ -36,7 +38,7 @@ public:
 	virtual void DrawIndexedInstanced(std::string Name) = 0;
 	virtual void ExecuteCommandLists() = 0;
 
-	virtual void DrawPrepare() = 0;
+	virtual void DrawPrepare(FRHIResource* resource) = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
 	virtual void Draw(const GameTimer& gt) = 0;
 	virtual void UpdateMVP(const GameTimer& gt) = 0;
@@ -44,5 +46,6 @@ public:
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) = 0;
-	virtual void CreateResoure(FRHIResource* RHIResource) {};
+	virtual void CreateResoure(FRHIResource* RHIResource, const std::string& Name) {};
+	virtual void CreateShader(FRHIResource* RHIResource, const std::wstring& filename)=0;
 };

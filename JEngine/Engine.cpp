@@ -44,7 +44,6 @@ void Engine::Run(GameTimer& gt)
 	gt.Reset();
 	isRuning = true;
 //开始主循环
-	mRender->RenderBegin();
 	while (isRuning && mWindows->Run())
 	{
 		//GameTick

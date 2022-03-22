@@ -53,8 +53,7 @@ private:
 	void BulidConstantBuffers(const std::string& Name);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name);
-	void BulidRootSignature();
-	void BulidShadersAndInputLayout();
+	void BulidRootSignature(FRHIResource* resource);
 	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
 public:
 	//override RHI
@@ -79,11 +78,12 @@ public:
 	virtual void ExecuteCommandLists() override;
 	virtual void UpdateMVP(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
-	virtual void DrawPrepare() override;
+	virtual void DrawPrepare(FRHIResource* resource) override;
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
-	void CreateResoure(FRHIResource* RHIResource) override;
+	void CreateResoure(FRHIResource* RHIResource,const std::string& Name) override;
+	virtual void CreateShader(FRHIResource* RHIResource, const std::wstring& filename) override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -127,7 +127,7 @@ private:
 
 	float Time;
 
-	bool IsRunDrawPrepare = true;
+
 protected:
 	bool InitDirect3D();
 	void CreateCommandObjects();
@@ -157,10 +157,10 @@ protected:
 	int mCurrBackBuffer = 0;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap;
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mRtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mDsvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mSrvHeap;
 
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;

@@ -6,9 +6,9 @@
 class FRender {
 public:
 	bool Init();
-	void RenderBegin();
 	void Render(const GameTimer& gt);
-	
+	void SceneRender(const GameTimer& gt);
+	void DepthRender(const GameTimer& gt);
 	~FRender();
 private:
 	std::shared_ptr<FDynamicRHI> mRHI = nullptr;
