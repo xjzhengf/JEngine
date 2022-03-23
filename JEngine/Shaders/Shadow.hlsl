@@ -48,8 +48,11 @@ struct VertexOut
 [RootSignature(Sample_RootSig)]
 VertexOut VS(VertexIn vin)
 {
+
 	VertexOut vout;
-	vout.PosH = float4(1.0,1.0,1.0,1.0);
+	float3 POSL = vin.PosL;
+
+	vout.PosH = mul(float4(POSL, 1.0f), gWorldViewProj);
 	return vout;
 }
 
