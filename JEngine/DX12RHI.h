@@ -42,17 +42,19 @@ public:
 	static DX12RHI* GetDX12RHI();
 	 virtual bool Initialize() override ;
 	 void OnResize() ;
+	 Microsoft::WRL::ComPtr<ID3D12Device> GetDevice();
 
 	void SetWindow(HWND mhMainWnd);
 	void SetClientWidht(int Width);
 	void SetClientHeight(int Height);
 	ID3D12Resource* CurrentBackBuffer()const;
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
 	void BulidDescriptorHeaps(const std::string& Name);
 	void BulidConstantBuffers(const std::string& Name);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
-	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name);
+	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource);
 	void BulidRootSignature(FRHIResource* resource);
 	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
 public:
@@ -60,11 +62,11 @@ public:
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
-	virtual void ResourceBarrier(unsigned int NumberBarrier, int stateBefore, int stateAfter) override;
-	virtual void ClearRenderTargetView() override;
-	virtual void ClearDepthStencilView() override;
+	virtual void ResourceBarrier(unsigned int NumberBarrier, ID3D12Resource* Resource, int stateBefore, int stateAfter) override;
+	virtual void ClearRenderTargetView(unsigned __int64 ptr) override;
+	virtual void ClearDepthStencilView(unsigned __int64 ptr) override;
 	virtual void OMSetStencilRef(int StencilRef) override;
-	virtual void OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)override;
+	virtual void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr)override;
 	virtual void SetDescriptorHeaps(std::string Name) override;
 	virtual void SetGraphicsRootSignature() override;
 	virtual void IASetVertexBuffers(Buffer* buffer) override;
@@ -73,16 +75,16 @@ public:
 	virtual void Offset(std::string Name) override;
 	virtual void SetGraphicsRootDescriptorTable(std::string Name) override;
 	virtual void SetGraphicsRoot32BitConstants() override;
+	virtual void SetPipelineState(const std::string& Name) override;
 	virtual void DrawIndexedInstanced(std::string Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void UpdateMVP(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
-	virtual void DrawPrepare(FRHIResource* resource) override;
+	virtual void DrawPrepare(FRHIResource* resource, FRenderResource* renderResource) override;
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
-	void CreateResoure(FRHIResource* RHIResource,const std::string& Name) override;
 	virtual void CreateShader(FRHIResource* RHIResource, const std::wstring& filename) override;
 protected:
 	HWND mhMainWnd = nullptr;
@@ -96,7 +98,6 @@ protected:
 
 	glm::vec3 cameraLoc;
 private:
-
 	std::map<std::string, ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 	std::map<std::string,std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
@@ -136,7 +137,7 @@ protected:
 	void CreateRtvAndDsvDescriptorHeaps();
 
 
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
+
 
 	void LogAdapters();
 	void LogAdapterOutputs(IDXGIAdapter* adapter);

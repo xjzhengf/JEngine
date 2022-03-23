@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "DXRHIResource.h"
 #include "FSceneRender.h"
+#include "FShadowResource.h"
 DX12RHI* DX12RHI::mDX12RHI = nullptr;
 DX12RHI::DX12RHI() 
 {
@@ -135,6 +136,11 @@ void DX12RHI::OnResize()
 	glm::vec3(0.0f, 0.0f, 0.0f), SceneManager::GetSceneManager()->GetCamera()->GetUp());
 }
 
+Microsoft::WRL::ComPtr<ID3D12Device> DX12RHI::GetDevice()
+{
+	return md3dDevice;
+}
+
 float DX12RHI::AspectRatio() const
 {
 	return static_cast<float>(mClientWidht) / mClientHeight;
@@ -221,7 +227,7 @@ void DX12RHI::Draw(const GameTimer& gt)
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 }
 
-void DX12RHI::DrawPrepare(FRHIResource* resource)
+void DX12RHI::DrawPrepare(FRHIResource* resource,FRenderResource* renderResource)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
@@ -231,7 +237,7 @@ void DX12RHI::DrawPrepare(FRHIResource* resource)
 		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*ActorPair.second);
 		BulidDescriptorHeaps(ActorPair.first);
 		BulidConstantBuffers(ActorPair.first);
-		BuildShaderResourceView(ActorPair.first,MeshInfo->StaticMeshName);
+		BuildShaderResourceView(ActorPair.first,MeshInfo->StaticMeshName, renderResource);
 		i++;
 	}
 }
@@ -305,56 +311,6 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 	return mGeo.get();
 }
 
-void DX12RHI::CreateResoure(FRHIResource* RHIResource, const std::string& Name)
-{
-	D3D12_RESOURCE_DESC depthStencilDesc;
-	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthStencilDesc.Alignment = 0;
-	depthStencilDesc.Width = mClientWidht;
-	depthStencilDesc.Height = mClientHeight;
-	depthStencilDesc.DepthOrArraySize = 1;
-	depthStencilDesc.MipLevels = 1;
-
-	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-
-	depthStencilDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	depthStencilDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-	D3D12_CLEAR_VALUE optClear;
-	optClear.Format = mDepthStencilFormat;
-	optClear.DepthStencil.Depth = 1.0f;
-	optClear.DepthStencil.Stencil = 0;
-	//Device创建CommittedResource
-	ThrowIfFailed(md3dDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&depthStencilDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-		&optClear,
-		IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
-
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	md3dDevice->CreateShaderResourceView(mShadowMap.Get(), &srvDesc, mCbvSrvHeap[Name]->GetCPUDescriptorHandleForHeapStart());
-
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	dsvDesc.Format = mDepthStencilFormat;
-	dsvDesc.Texture2D.MipSlice = 0;
-	//Device创建DepthStencilView
-	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
-
-
-}
 
 void DX12RHI::CreateShader(FRHIResource* RHIResource, const std::wstring& filename)
 {
@@ -365,11 +321,12 @@ void DX12RHI::CreateShader(FRHIResource* RHIResource, const std::wstring& filena
 void DX12RHI::BulidDescriptorHeaps(const std::string& Name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-	cbvHeapDesc.NumDescriptors = 3;
+	cbvHeapDesc.NumDescriptors =10;
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[Name])));
+
 }
 
 void DX12RHI::BulidConstantBuffers(const std::string& Name)
@@ -394,7 +351,7 @@ void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResou
 
 }
 
-void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name)
+void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[ActorName]->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -432,6 +389,15 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	srvDesc2.Texture2D.MipLevels = woodCrateNormal->GetDesc().MipLevels;
 	srvDesc2.Texture2D.ResourceMinLODClamp = 0.0f;
 	md3dDevice->CreateShaderResourceView(woodCrateNormal.Get(), &srvDesc2, hDescriptor);
+
+	auto srvCpuStart = mCbvSrvHeap[ActorName]->GetCPUDescriptorHandleForHeapStart();
+	auto srvGpuStart = mCbvSrvHeap[ActorName]->GetGPUDescriptorHandleForHeapStart();
+	auto dsvCpuStart = mDsvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	  dynamic_cast<DXShadowResource*>(RenderResource)->BuildDescriptors(
+		CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, 3, mCbvSrvUavDescriptorSize),
+		CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, 3, mCbvSrvUavDescriptorSize),
+		CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 1, mDsvDescriptorSize));
 }
 
 
@@ -446,12 +412,12 @@ void DX12RHI::BulidRootSignature(FRHIResource* resource)
 
 void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOName)
 {
-	auto dXRHIResource = dynamic_cast<DXRHIResource*>(RHIResource);
-	dXRHIResource->BuildPSO(PSOName);
-	dXRHIResource->psoDesc.pRootSignature = mRootSigmature.Get();
-	dXRHIResource->psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	dXRHIResource->psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&(dXRHIResource->psoDesc), IID_PPV_ARGS(&mPSO[PSOName])));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
+	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->BuildPSO(PSOName);
+	PSOState.pRootSignature = mRootSigmature.Get();
+	PSOState.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	PSOState.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[PSOName])));
 }
 
 void DX12RHI::LoadTexture(FTexture* TextureResource)
@@ -507,19 +473,23 @@ void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 }
 
-void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, int stateBefore , int stateAfter)
+void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, ID3D12Resource* Resource, int stateBefore , int stateAfter)
 {
-	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
+	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(Resource, D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
 }
 
-void DX12RHI::ClearRenderTargetView()
+void DX12RHI::ClearRenderTargetView(unsigned __int64 ptr)
 {
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle;
+	handle.ptr = ptr;
+	mCommandList->ClearRenderTargetView(handle, Colors::LightSteelBlue, 0, nullptr);
 }
 
-void DX12RHI::ClearDepthStencilView()
+void DX12RHI::ClearDepthStencilView(unsigned __int64 ptr)
 {
-	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle;
+	handle.ptr = ptr;
+	mCommandList->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 void DX12RHI::OMSetStencilRef(int StencilRef)
@@ -527,9 +497,28 @@ void DX12RHI::OMSetStencilRef(int StencilRef)
 	mCommandList->OMSetStencilRef(StencilRef);
 }
 
-void DX12RHI::OMSetRenderTargets(int numTatgetDescriptors, bool RTsSingleHandleToDescriptorRange)
+void DX12RHI::OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr)
 {
-	mCommandList->OMSetRenderTargets(numTatgetDescriptors, &CurrentBackBufferView(), RTsSingleHandleToDescriptorRange, &DepthStencilView());
+	std::unique_ptr<CD3DX12_CPU_DESCRIPTOR_HANDLE> RThandle = std::make_unique<CD3DX12_CPU_DESCRIPTOR_HANDLE>();
+	std::unique_ptr<CD3DX12_CPU_DESCRIPTOR_HANDLE> DShandle = std::make_unique<CD3DX12_CPU_DESCRIPTOR_HANDLE>();
+
+	if (RTptr != 0) {
+		RThandle->ptr = RTptr;
+	}
+	else
+	{
+		RThandle = nullptr;
+	}
+
+	if (DSptr != 0) {
+		DShandle->ptr = DSptr;
+	}
+	else
+	{
+		DShandle = nullptr;
+	}
+	//mCommandList->OMSetRenderTargets(numTatgetDescriptors, &CurrentBackBufferView(), RTsSingleHandleToDescriptorRange, &DepthStencilView());
+	mCommandList->OMSetRenderTargets(numTatgetDescriptors, RThandle.get(), RTsSingleHandleToDescriptorRange, DShandle.get());
 }
 
 void DX12RHI::SetDescriptorHeaps(std::string Name)
@@ -578,6 +567,11 @@ void DX12RHI::SetGraphicsRootDescriptorTable(std::string Name)
 void DX12RHI::SetGraphicsRoot32BitConstants()
 {
 	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
+}
+
+void DX12RHI::SetPipelineState(const std::string& Name)
+{
+	mCommandList->SetPipelineState(mPSO[Name].Get());
 }
 
 void DX12RHI::DrawIndexedInstanced(std::string Name)
@@ -655,7 +649,7 @@ void DX12RHI::CreateRtvAndDsvDescriptorHeaps()
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.NumDescriptors =2;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
 }
 void DX12RHI::CreateSpawChain()

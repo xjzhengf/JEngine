@@ -159,6 +159,7 @@
     <ClCompile Include="FRenderResource.cpp" />
     <ClCompile Include="FRHIFactory.cpp" />
     <ClCompile Include="FSceneRender.cpp" />
+    <ClCompile Include="FShadowResource.cpp" />
     <ClCompile Include="FTexture.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="LauncherPCWindow.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="FRenderResource.h" />
     <ClInclude Include="FRHIFactory.h" />
     <ClInclude Include="FSceneRender.h" />
+    <ClInclude Include="FShadowResource.h" />
     <ClInclude Include="FTexture.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="LauncherPCWindow.h" />
@@ -208,6 +210,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Shadow.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

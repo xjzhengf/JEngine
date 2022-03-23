@@ -43,6 +43,7 @@ void Engine::Run(GameTimer& gt)
 {
 	gt.Reset();
 	isRuning = true;
+	mRender->RenderBegin();
 //开始主循环
 	while (isRuning && mWindows->Run())
 	{

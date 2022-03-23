@@ -11,23 +11,37 @@ void DXRHIResource::CreateShader(const std::wstring& filename)
 	mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_0");
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DXRHIResource::BackBufferView()
+ID3D12Resource* DXRHIResource::BackBuffer()
 {
-	return DX12RHI::GetDX12RHI()->CurrentBackBufferView();
+	return DX12RHI::GetDX12RHI()->CurrentBackBuffer();
 }
 
-void DXRHIResource::BuildPSO(const std::string& Name)
+unsigned __int64 DXRHIResource::CurrentBackBufferView()
+{
+	unsigned __int64 ptr = DX12RHI::GetDX12RHI()->CurrentBackBufferView().ptr;
+	return ptr;
+}
+
+unsigned __int64 DXRHIResource::CurrentDepthStencilView()
+{
+	unsigned __int64 ptr = DX12RHI::GetDX12RHI()->DepthStencilView().ptr;
+	return ptr;
+}
+
+D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildPSO(const std::string& Name)
 {
 	if (Name == "Scene") {
-		BuildRenderPSO();
+		return BuildRenderPSO();
 	}
 	if (Name == "ShadowMap") {
-		BuildDepthPSO();
+		return BuildDepthPSO();
 	}
+	return D3D12_GRAPHICS_PIPELINE_STATE_DESC();
 }
 
-void DXRHIResource::BuildRenderPSO()
+D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildRenderPSO()
 {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	mInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -78,10 +92,12 @@ void DXRHIResource::BuildRenderPSO()
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	return psoDesc;
 }
 
-void DXRHIResource::BuildDepthPSO()
+D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	mInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
@@ -127,5 +143,7 @@ void DXRHIResource::BuildDepthPSO()
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 0;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	return psoDesc;
 }

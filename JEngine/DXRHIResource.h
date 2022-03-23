@@ -5,14 +5,15 @@ class DXRHIResource : public FRHIResource {
 public:
 	virtual void CreateShader(const std::wstring& filename)override;
 	virtual void Release() override {};
-	D3D12_CPU_DESCRIPTOR_HANDLE BackBufferView();
-    void BuildPSO(const std::string& Name);
-	void BuildRenderPSO();
-	void BuildDepthPSO();
+	ID3D12Resource* BackBuffer();
+	unsigned __int64  CurrentBackBufferView();
+	unsigned __int64  CurrentDepthStencilView();
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildPSO(const std::string& Name);
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildRenderPSO();
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildDepthPSO();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 };
 
 enum DX_RESOURCE_STATES

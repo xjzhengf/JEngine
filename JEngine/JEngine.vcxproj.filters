@@ -126,6 +126,9 @@
     <ClCompile Include="FSceneRender.cpp">
       <Filter>Rander\Source</Filter>
     </ClCompile>
+    <ClCompile Include="FShadowResource.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -221,9 +224,15 @@
     <ClInclude Include="FDirectionalLightProperty.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
+    <ClInclude Include="FShadowResource.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\Shadow.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
