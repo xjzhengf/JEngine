@@ -29,7 +29,7 @@ cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj;
 	float4x4 gLightViewProj;
-	float4x4 W;
+	float4x4 gViewProj;
 	float4x4 gWorld;
 	float4x4 Rotation;
 	float4x4 Scale;
@@ -54,8 +54,9 @@ VertexOut VS(VertexIn vin)
 
 	VertexOut vout;
 	float3 POSL = vin.PosL;
-	//float4 posW = mul(float4(vin.PosL, 1.0f),W);
-	vout.PosH = mul(float4(vin.PosL, 1.0f), gLightViewProj);
+	float4 posW = mul(float4(POSL, 1.0f), gWorld);
+	// Transform to homogeneous clip space.
+	vout.PosH = mul(posW, gLightViewProj);
 	return vout;
 }
 

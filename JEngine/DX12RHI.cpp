@@ -217,10 +217,10 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		glm::mat4x4 W = objConstants.Translate * objConstants.Rotation * objConstants.Scale;
 		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
-
-		float Radius = 1000;
-		//glm::vec3 lightPos = -2.0f * Radius * glm::vec3(2500.0f, 0.0f, 2500.0f);
-		glm::mat4x4 lightView = glm::lookAtLH(glm::vec3(5000.0f, 5000.0f, 5000.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		objConstants.ViewProj = glm::transpose(proj * view);
+		float Radius = 2000;
+		glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
+		glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
 
@@ -232,9 +232,9 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		float f = sphereCenterLS.z + Radius;
 		glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
 
-		glm::mat4x4 LightViewProj =  lightProj * lightView * W * mWorld;
-		objConstants.W = W;
-		objConstants.World = W * mWorld;
+		//glm::mat4x4 LightViewProj =  lightProj * lightView * W * mWorld;
+		glm::mat4x4 LightViewProj =  lightProj * lightView ;
+		objConstants.World = glm::transpose(W * mWorld);
 		objConstants.directionalLight.Brightness =  SceneManager::GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction =  SceneManager::GetSceneManager()->DirectionalLight.Direction;
 		objConstants.directionalLight.Location =  SceneManager::GetSceneManager()->DirectionalLight.Location;

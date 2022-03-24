@@ -22,7 +22,7 @@ using namespace DirectX::PackedVector;
 struct ObjectConstants {
 	glm::mat4x4 WorldViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 LightViewProj = glm::identity<glm::mat4x4>();
-	glm::mat4x4 W = glm::identity<glm::mat4x4>();
+	glm::mat4x4 ViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();

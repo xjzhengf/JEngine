@@ -29,7 +29,7 @@ Texture2D    gNormalMap : register(t1);
 Texture2D    gShadowMap : register(t2);
 SamplerState gsamPointWrap        : register(s0);
 SamplerComparisonState gSamShadow       : register(s1);
-//SamplerState gsamLinearWrap       : register(s2);
+//SamplerState gSamLinearWarp       : register(s2);
 //SamplerState gsamLinearClamp      : register(s3);
 //SamplerState gsamAnisotropicWrap  : register(s4);
 //SamplerState gsamAnisotropicClamp : register(s5);
@@ -44,7 +44,7 @@ cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj;
 	float4x4 gLightViewProj;
-	float4x4 W;
+	float4x4 gViewProj;
 	float4x4 gWorld;
 	float4x4 Rotation;
 	float4x4 Scale;
@@ -76,19 +76,17 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	float3 POSL = vin.PosL;
-
-	//POSL.z += sin(Time%180.0)*50;
-
+	POSL.z += sin(Time)*100;
+	float4 posW = mul(float4(POSL, 1.0f), gWorld);
 	// Transform to homogeneous clip space.
-	vout.PosH = mul(float4(POSL, 1.0f), gWorldViewProj);
-
+	vout.PosH = mul(posW, gViewProj);
 	// Just pass vertex color into the pixel shader.
 	vout.Color = vin.Color;
 	vout.Normal = vin.Normal;
 	//vout.TexC = vin.TexC; 
 	float4 texC = mul(float4(vin.TexC, 0.0f, 1.0f), TexTransform);
 	vout.TexC = texC.xy;
-	vout.ShadowPosH = mul(float4(POSL, 1.0f), gLightViewProj);
+	vout.ShadowPosH = mul(posW, gLightViewProj);
 	return vout;
 }
 
@@ -141,6 +139,18 @@ float CalcShadowFactor(float4 shadowPosH)
 
 	return percentLit / 9.0f;
 }
+
+float ShadowCalculation(float4 shadowPosH) {
+	shadowPosH.xyz /= shadowPosH.w;
+	float depth = shadowPosH.z;
+
+	uint width, height, numMips;
+	gShadowMap.GetDimensions(0, width, height, numMips);
+	float2 PiexlPos = shadowPosH.xy * width;
+	float depthInMap = gShadowMap.Load(int3(PiexlPos, 0)).r;
+	return depth > depthInMap ? 0 : 1;
+
+}
 [RootSignature(Sample_RootSig)]
 float4 PS(VertexOut pin) : SV_Target
 {
@@ -152,9 +162,11 @@ float4 PS(VertexOut pin) : SV_Target
 	clip(diffuseAlbedo.a - 0.1f);
 #endif
 	float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f) * diffuseAlbedo;
-	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-	if (shadowFactor != 1.0) {
+	//float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	float shadowFactor = ShadowCalculation(pin.ShadowPosH);
+	if (shadowFactor) {
 		diffuseAlbedo = ambient;
 	}
 	return diffuseAlbedo;
 }
+
