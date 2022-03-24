@@ -6,9 +6,9 @@ void DXRHIResource::CreateShader(const std::wstring& filename)
 {
 	HRESULT hr = S_OK;
 	//mvsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");	
-	mvsByteCode = d3dUtil::CompileShader(filename, nullptr, "VS", "vs_5_0");
+	mvsByteCode = d3dUtil::CompileShader(filename, nullptr, "VS", "vs_5_1");
 	//mpsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
-	mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_0");
+	mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_1");
 }
 
 ID3D12Resource* DXRHIResource::BackBuffer()

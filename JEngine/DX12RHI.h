@@ -8,6 +8,7 @@
 #include "FDynamicRHI.h"
 #include "UploadBuffer.h"
 #include "Buffer.h"
+#include "FDirectionalLightProperty.h"
 #include "Material.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
@@ -19,12 +20,15 @@ using namespace DirectX::PackedVector;
 
 
 struct ObjectConstants {
-	//XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
 	glm::mat4x4 WorldViewProj = glm::identity<glm::mat4x4>();
+	glm::mat4x4 LightViewProj = glm::identity<glm::mat4x4>();
+	glm::mat4x4 W = glm::identity<glm::mat4x4>();
+	glm::mat4x4 World = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
 	glm::mat4x4 TexTransform = glm::identity<glm::mat4x4>();
+	FDirectionalLight directionalLight;
 	float Time = 0.0f;
 };
 
@@ -80,6 +84,7 @@ public:
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void UpdateMVP(const GameTimer& gt) override;
+	virtual void UpdateLight(const GameTimer& gt)override;
 	virtual void Draw(const GameTimer& gt) override;
 	virtual void DrawPrepare(FRHIResource* resource, FRenderResource* renderResource) override;
 
@@ -135,9 +140,6 @@ protected:
 	void CreateSpawChain();
 	void FlushCommandQueue();
 	void CreateRtvAndDsvDescriptorHeaps();
-
-
-
 
 	void LogAdapters();
 	void LogAdapterOutputs(IDXGIAdapter* adapter);

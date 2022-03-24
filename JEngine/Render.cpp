@@ -68,6 +68,7 @@ void FRender::SceneRender(const GameTimer& gt)
 
 void FRender::DepthRender(const GameTimer& gt)
 {
+
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
