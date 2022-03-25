@@ -34,7 +34,7 @@ public:
 	virtual void IASetPrimitiveTopology() = 0;
 	virtual void Offset(std::string Name) = 0;
 	virtual void SetPipelineState(const std::string& Name) = 0;
-	virtual void SetGraphicsRootDescriptorTable(std::string Name) {};
+	virtual void SetGraphicsRootDescriptorTable(std::string Name, bool isDepth) {};
 	virtual void SetGraphicsRoot32BitConstants() = 0;
 	virtual void DrawIndexedInstanced(std::string Name) = 0;
 	virtual void ExecuteCommandLists() = 0;

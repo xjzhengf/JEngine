@@ -12,14 +12,23 @@
                 "addressU = TEXTURE_ADDRESS_WRAP," \
                 "addressV = TEXTURE_ADDRESS_WRAP," \
                 "addressW = TEXTURE_ADDRESS_WRAP," \
-                "filter = FILTER_MIN_MAG_MIP_POINT)"
+                "filter = FILTER_MIN_MAG_MIP_POINT),"\
+"StaticSampler(s1," \
+                "addressU = TEXTURE_ADDRESS_BORDER," \
+                "addressV = TEXTURE_ADDRESS_BORDER," \
+                "addressW = TEXTURE_ADDRESS_BORDER," \
+                "filter = FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,"\
+                "mipLODBias =0 ,"\
+                "maxAnisotropy = 16,"\
+                "comparisonFunc = COMPARISON_LESS_EQUAL,"\
+                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK)"
 
 Texture2D    gDiffuseMap : register(t0);
 Texture2D    gNormalMap : register(t1);
 Texture2D    gShadowMap : register(t2);
 SamplerState gsamPointWrap        : register(s0);
-//SamplerState gsamPointClamp       : register(s1);
-//SamplerState gsamLinearWrap       : register(s2);
+SamplerComparisonState gSamShadow       : register(s1);
+//SamplerState gSamLinearWarp       : register(s2);
 //SamplerState gsamLinearClamp      : register(s3);
 //SamplerState gsamAnisotropicWrap  : register(s4);
 //SamplerState gsamAnisotropicClamp : register(s5);
@@ -28,6 +37,7 @@ SamplerState gsamPointWrap        : register(s0);
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj;
+	float4x4 tLightViewProj;
 	float4x4 gLightViewProj;
 	float4x4 gViewProj;
 	float4x4 gWorld;
@@ -36,6 +46,7 @@ cbuffer cbPerObject : register(b0)
 	float4x4 Translate;
 	float4x4 TexTransform;
 	float Time;
+
 };
 float3 CameraLoc : register(b1);
 
@@ -54,15 +65,14 @@ VertexOut VS(VertexIn vin)
 
 	VertexOut vout;
 	float3 POSL = vin.PosL;
-	float4 posW = mul(float4(POSL, 1.0f), gWorld);
+	float4x4 posW = mul(gWorld,gLightViewProj );
 	// Transform to homogeneous clip space.
-	vout.PosH = mul(posW, gLightViewProj);
+	vout.PosH = mul(float4(POSL, 1.0f), posW );
 	return vout;
 }
 
 void PS(VertexOut pin) 
 {
-
 }
 
 

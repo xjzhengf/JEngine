@@ -63,6 +63,8 @@ void DXShadowResource::BuildResource()
 	texDesc.Alignment = 0;
 	texDesc.Width = Engine::GetEngine()->GetWindow()->GetClientWidht();
 	texDesc.Height = Engine::GetEngine()->GetWindow()->GetClientHeight();
+	//texDesc.Width =1024;
+	//texDesc.Height =1024;
 	texDesc.DepthOrArraySize = 1;
 	texDesc.MipLevels = 1;
 	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;

@@ -50,6 +50,7 @@ void FRender::SceneRender(const GameTimer& gt)
 	mRHI->OMSetStencilRef(0);
 	mRHI->OMSetRenderTargets(1, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentBackBufferView(), true, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentDepthStencilView());
 	mRHI->SetPipelineState("Scene");
+	mRHI->UpdateMVP(gt);
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		mRHI->SetDescriptorHeaps(Actor.first);
@@ -57,12 +58,12 @@ void FRender::SceneRender(const GameTimer& gt)
 		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(Actor.first);
+		mRHI->SetGraphicsRootDescriptorTable(Actor.first,false);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(Actor.first);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
-	mRHI->UpdateMVP(gt);
+	
 	mRHI->ExecuteCommandLists();
 }
 
@@ -75,6 +76,7 @@ void FRender::DepthRender(const GameTimer& gt)
 	mRHI->ClearDepthStencilView(std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->DSV().ptr);
 	mRHI->OMSetRenderTargets(0, 0, false, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->DSV().ptr);
 	mRHI->SetPipelineState("ShadowMap");
+	mRHI->UpdateMVP(gt);
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 
@@ -83,12 +85,12 @@ void FRender::DepthRender(const GameTimer& gt)
 		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(Actor.first);
+		mRHI->SetGraphicsRootDescriptorTable(Actor.first,true);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(Actor.first);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
-
+	
 }
 
 FRender::~FRender()

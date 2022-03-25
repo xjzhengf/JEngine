@@ -230,10 +230,19 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		float r = sphereCenterLS.x + Radius;
 		float t = sphereCenterLS.y + Radius;
 		float f = sphereCenterLS.z + Radius;
-		glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
 
+
+		glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
+		glm::mat4 T(
+			0.5f, 0.0f, 0.0f, 0.0f,
+			0.0f, -0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.5f, 0.5f, 0.0f, 1.0f);
 		//glm::mat4x4 LightViewProj =  lightProj * lightView * W * mWorld;
-		glm::mat4x4 LightViewProj =  lightProj * lightView ;
+		glm::mat4x4 LightViewProj;
+
+		objConstants.TLightViewProj = glm::transpose(T * lightProj * lightView);
+		LightViewProj= lightProj * lightView;
 		objConstants.World = glm::transpose(W * mWorld);
 		objConstants.directionalLight.Brightness =  SceneManager::GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction =  SceneManager::GetSceneManager()->DirectionalLight.Direction;
@@ -583,12 +592,14 @@ void DX12RHI::Offset(std::string Name)
 	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 }
 
-void DX12RHI::SetGraphicsRootDescriptorTable(std::string Name)
+void DX12RHI::SetGraphicsRootDescriptorTable(std::string Name, bool isDepth)
 {
 	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
-	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
-	mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+	if (!isDepth) {
+		hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+	}
 }
 
 void DX12RHI::SetGraphicsRoot32BitConstants()

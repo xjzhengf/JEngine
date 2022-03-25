@@ -125,6 +125,7 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 	stencilDesc.DepthEnable = true;
 	stencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	stencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	
 	//ÕýÃæ
 	stencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
 	stencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
@@ -137,6 +138,9 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
+	psoDesc.RasterizerState.DepthBias = 100000;
+	psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
+	psoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
 	psoDesc.DepthStencilState = stencilDesc;

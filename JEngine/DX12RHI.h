@@ -21,6 +21,7 @@ using namespace DirectX::PackedVector;
 
 struct ObjectConstants {
 	glm::mat4x4 WorldViewProj = glm::identity<glm::mat4x4>();
+	glm::mat4x4 TLightViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 LightViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 ViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
@@ -28,8 +29,8 @@ struct ObjectConstants {
 	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
 	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
 	glm::mat4x4 TexTransform = glm::identity<glm::mat4x4>();
-	FDirectionalLight directionalLight;
 	float Time = 0.0f;
+	FDirectionalLight directionalLight;
 };
 
 class DX12RHI  :public FDynamicRHI {
@@ -77,7 +78,7 @@ public:
 	virtual void IASetIndexBuffer(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
 	virtual void Offset(std::string Name) override;
-	virtual void SetGraphicsRootDescriptorTable(std::string Name) override;
+	virtual void SetGraphicsRootDescriptorTable(std::string Name, bool isDepth) override;
 	virtual void SetGraphicsRoot32BitConstants() override;
 	virtual void SetPipelineState(const std::string& Name) override;
 	virtual void DrawIndexedInstanced(std::string Name) override;

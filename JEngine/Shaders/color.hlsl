@@ -43,6 +43,7 @@ struct Light {
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj;
+	float4x4 tLightViewProj;
 	float4x4 gLightViewProj;
 	float4x4 gViewProj;
 	float4x4 gWorld;
@@ -76,17 +77,19 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	float3 POSL = vin.PosL;
-	POSL.z += sin(Time)*100;
+	//POSL.z += sin(Time)*100;
 	float4 posW = mul(float4(POSL, 1.0f), gWorld);
-	// Transform to homogeneous clip space.
+	
 	vout.PosH = mul(posW, gViewProj);
-	// Just pass vertex color into the pixel shader.
+	vout.ShadowPosH = mul(posW, tLightViewProj);
 	vout.Color = vin.Color;
 	vout.Normal = vin.Normal;
-	//vout.TexC = vin.TexC; 
+
 	float4 texC = mul(float4(vin.TexC, 0.0f, 1.0f), TexTransform);
 	vout.TexC = texC.xy;
-	vout.ShadowPosH = mul(posW, gLightViewProj);
+	
+
+
 	return vout;
 }
 
@@ -115,7 +118,7 @@ float CalcShadowFactor(float4 shadowPosH)
 	shadowPosH.xyz /= shadowPosH.w;
 
 	// Depth in NDC space.
-	float depth = shadowPosH.z;
+	float currentDepth = shadowPosH.z;
 
 	uint width, height, numMips;
 	gShadowMap.GetDimensions(0, width, height, numMips);
@@ -134,19 +137,21 @@ float CalcShadowFactor(float4 shadowPosH)
 	[unroll]
 	for (int i = 0; i < 9; ++i)
 	{
-		percentLit += gShadowMap.SampleCmpLevelZero(gSamShadow, shadowPosH.xy + offsets[i], depth).r;
+		percentLit += gShadowMap.SampleCmpLevelZero(gSamShadow, shadowPosH.xy + offsets[i], currentDepth).r;
 	}
 
 	return percentLit / 9.0f;
 }
 
 float ShadowCalculation(float4 shadowPosH) {
+	
 	shadowPosH.xyz /= shadowPosH.w;
 	float depth = shadowPosH.z;
-
 	uint width, height, numMips;
 	gShadowMap.GetDimensions(0, width, height, numMips);
-	float2 PiexlPos = shadowPosH.xy * width;
+	float2 PiexlPos;
+	PiexlPos= shadowPosH.xy* width;
+
 	float depthInMap = gShadowMap.Load(int3(PiexlPos, 0)).r;
 	return depth > depthInMap ? 0 : 1;
 
@@ -155,18 +160,17 @@ float ShadowCalculation(float4 shadowPosH) {
 float4 PS(VertexOut pin) : SV_Target
 {
 
-	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
-	float4 normalAlbedo = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC)* gNormalMap.Sample(gsamPointWrap, pin.TexC);
 
 #ifdef ALPHA_TEST
 	clip(diffuseAlbedo.a - 0.1f);
 #endif
-	float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f) * diffuseAlbedo;
-	//float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-	float shadowFactor = ShadowCalculation(pin.ShadowPosH);
-	if (shadowFactor) {
-		diffuseAlbedo = ambient;
-	}
-	return diffuseAlbedo;
+	//float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f) * diffuseAlbedo;
+	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	//float shadowFactor = ShadowCalculation(pin.ShadowPosH);
+	//if (shadowFactor == 0) {
+	//	diffuseAlbedo = ambient;
+	//}
+	return diffuseAlbedo * (shadowFactor + 0.1);
 }
 
