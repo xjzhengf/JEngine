@@ -218,9 +218,13 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
 		objConstants.WorldViewProj = glm::transpose(worldViewProj);
 		objConstants.ViewProj = glm::transpose(proj * view);
-		float Radius = 2000;
+		float Radius = 2500;
 		glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
+		
+		lightPos.y = lightPos.y * glm::cos(Time)- lightPos.x*glm::sin(Time);
+		lightPos.x = lightPos.x * glm::cos(Time)+ lightPos.y*glm::sin(Time);
 		glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
 
 		glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
 
