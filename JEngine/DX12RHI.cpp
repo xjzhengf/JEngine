@@ -182,7 +182,7 @@ void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12RHI::UpdateMVP(const GameTimer& gt)
+void DX12RHI::Update(const GameTimer& gt)
 {
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
@@ -221,8 +221,8 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		float Radius = 2500;
 		glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
 		
-		lightPos.y = lightPos.y * glm::cos(Time)- lightPos.x*glm::sin(Time);
-		lightPos.x = lightPos.x * glm::cos(Time)+ lightPos.y*glm::sin(Time);
+		lightPos.x = lightPos.x * glm::cos(Time/2)- lightPos.y*glm::sin(Time/2);
+		lightPos.y = lightPos.y * glm::cos(Time/2)+ lightPos.x*glm::sin(Time/2);
 		glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
@@ -254,11 +254,6 @@ void DX12RHI::UpdateMVP(const GameTimer& gt)
 		objConstants.LightViewProj = glm::transpose(LightViewProj);
 		mObjectCB[ActorPair.first]->CopyData(0, objConstants);
 	}
-}
-
-void DX12RHI::UpdateLight(const GameTimer& gt)
-{
-
 }
 
 void DX12RHI::Draw(const GameTimer& gt)

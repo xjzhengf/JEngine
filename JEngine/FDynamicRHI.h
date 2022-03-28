@@ -42,8 +42,7 @@ public:
 	virtual void DrawPrepare(FRHIResource* resource, FRenderResource* renderResource) = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
 	virtual void Draw(const GameTimer& gt) = 0;
-	virtual void UpdateMVP(const GameTimer& gt) = 0;
-	virtual void UpdateLight(const GameTimer& gt) = 0;
+	virtual void Update(const GameTimer& gt) = 0;
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) = 0;

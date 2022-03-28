@@ -84,8 +84,7 @@ public:
 	virtual void DrawIndexedInstanced(std::string Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void UpdateMVP(const GameTimer& gt) override;
-	virtual void UpdateLight(const GameTimer& gt)override;
+	virtual void Update(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
 	virtual void DrawPrepare(FRHIResource* resource, FRenderResource* renderResource) override;
 
