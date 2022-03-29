@@ -4,7 +4,6 @@
 class FDirectionalLight :FRenderResource
 {
 public:
-	
 	float Brightness;
 	glm::vec3 Direction;
 	glm::vec4 Location;

@@ -60,22 +60,21 @@ private:
 	void BulidConstantBuffers(const std::string& Name);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource);
-	void BulidRootSignature(FRHIResource* resource);
+	void BulidRootSignature();
 	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
 public:
 	//override RHI
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
-	virtual void ResourceBarrier(unsigned int NumberBarrier, ID3D12Resource* Resource, int stateBefore, int stateAfter) override;
+	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
 	virtual void ClearRenderTargetView(unsigned __int64 ptr) override;
 	virtual void ClearDepthStencilView(unsigned __int64 ptr) override;
 	virtual void OMSetStencilRef(int StencilRef) override;
 	virtual void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr)override;
 	virtual void SetDescriptorHeaps(std::string Name) override;
 	virtual void SetGraphicsRootSignature() override;
-	virtual void IASetVertexBuffers(Buffer* buffer) override;
-	virtual void IASetIndexBuffer(Buffer* buffer) override;
+	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
 	virtual void Offset(std::string Name) override;
 	virtual void SetGraphicsRootDescriptorTable(std::string Name, bool isDepth) override;
@@ -86,11 +85,12 @@ public:
 	virtual void ExecuteCommandLists() override;
 	virtual void Update(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
-	virtual void DrawPrepare(FRHIResource* resource, FRenderResource* renderResource) override;
+	virtual void DrawPrepare() override;
 
 public:
 	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
-	virtual void CreateShader(FRHIResource* RHIResource, const std::wstring& filename) override;
+	virtual void CreateShader( const std::wstring& filename) override;
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* renderResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 

@@ -3,17 +3,18 @@
 #include "RHIResource.h"
 class DXRHIResource : public FRHIResource {
 public:
-	virtual void CreateShader(const std::wstring& filename)override;
+	DXRHIResource();
 	virtual void Release() override {};
-	ID3D12Resource* BackBuffer();
-	unsigned __int64  CurrentBackBufferView();
-	unsigned __int64  CurrentDepthStencilView();
+	virtual std::shared_ptr<FResource> BackBuffer()override;
+
+	virtual unsigned __int64  CurrentBackBufferViewHand()override;
+	virtual unsigned __int64  CurrentDepthStencilViewHand()override;
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildPSO(const std::string& Name);
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildRenderPSO();
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildDepthPSO();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
-	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
+private:
+	std::shared_ptr<FResource> mResource;
 };
 
 enum DX_RESOURCE_STATES

@@ -2,6 +2,7 @@
 #include "DX12RHI.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
+#include "ShaderManager.h"
 #include "Engine.h"
 #include "DXRHIResource.h"
 #include "FSceneRender.h"
@@ -186,7 +187,6 @@ void DX12RHI::Update(const GameTimer& gt)
 {
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
-
 	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
 		SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
@@ -224,8 +224,6 @@ void DX12RHI::Update(const GameTimer& gt)
 		lightPos.x = lightPos.x * glm::cos(Time/2)- lightPos.y*glm::sin(Time/2);
 		lightPos.y = lightPos.y * glm::cos(Time/2)+ lightPos.x*glm::sin(Time/2);
 		glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-
 		glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
 
 		float l = sphereCenterLS.x - Radius;
@@ -234,15 +232,12 @@ void DX12RHI::Update(const GameTimer& gt)
 		float r = sphereCenterLS.x + Radius;
 		float t = sphereCenterLS.y + Radius;
 		float f = sphereCenterLS.z + Radius;
-
-
 		glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
 		glm::mat4 T(
 			0.5f, 0.0f, 0.0f, 0.0f,
 			0.0f, -0.5f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.5f, 0.5f, 0.0f, 1.0f);
-		//glm::mat4x4 LightViewProj =  lightProj * lightView * W * mWorld;
 		glm::mat4x4 LightViewProj;
 
 		objConstants.TLightViewProj = glm::transpose(T * lightProj * lightView);
@@ -262,19 +257,10 @@ void DX12RHI::Draw(const GameTimer& gt)
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 }
 
-void DX12RHI::DrawPrepare(FRHIResource* resource,FRenderResource* renderResource)
+void DX12RHI::DrawPrepare()
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-	size_t SceneSize = SceneManager::GetSceneManager()->GetAllActor().size();
-	BulidRootSignature(resource);
-	int i = 0;
-	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
-		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*ActorPair.second);
-		BulidDescriptorHeaps(ActorPair.first);
-		BulidConstantBuffers(ActorPair.first);
-		BuildShaderResourceView(ActorPair.first,MeshInfo->StaticMeshName, renderResource);
-		i++;
-	}
+	BulidRootSignature();
 }
 
 Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
@@ -347,9 +333,17 @@ Buffer* DX12RHI::CreateBuffer(FRenderResource* renderResource)
 }
 
 
-void DX12RHI::CreateShader(FRHIResource* RHIResource, const std::wstring& filename)
+void DX12RHI::CreateShader(const std::wstring& filename)
 {
-	RHIResource->CreateShader(filename);
+	ShaderManager::GetShaderManager()->CreateShader(filename);
+}
+
+void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName,ActorStruct* Actor,FRenderResource* renderResource)
+{
+		StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
+		BulidDescriptorHeaps(ActorName);
+		BulidConstantBuffers(ActorName);
+		BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, renderResource);
 }
 
 
@@ -437,10 +431,10 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 
 
 
-void DX12RHI::BulidRootSignature(FRHIResource* resource)
+void DX12RHI::BulidRootSignature()
 {
 	
-	ThrowIfFailed(md3dDevice->CreateRootSignature(0, dynamic_cast<DXRHIResource*>(resource)->mvsByteCode->GetBufferPointer(), dynamic_cast<DXRHIResource*>(resource)->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
+	ThrowIfFailed(md3dDevice->CreateRootSignature(0, ShaderManager::GetShaderManager()->mvsByteCode->GetBufferPointer(), ShaderManager::GetShaderManager()->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
 
 
@@ -508,9 +502,9 @@ void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 }
 
-void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, ID3D12Resource* Resource, int stateBefore , int stateAfter)
+void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore , int stateAfter)
 {
-	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(Resource, D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
+	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(Resource->Resource, D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
 }
 
 void DX12RHI::ClearRenderTargetView(unsigned __int64 ptr)
@@ -567,16 +561,11 @@ void DX12RHI::SetGraphicsRootSignature()
 	mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
 }
 
-void DX12RHI::IASetVertexBuffers(Buffer* buffer)
+void DX12RHI::IASetVertexAndIndexBuffers(Buffer* buffer)
 {
 	auto dxBuffer = dynamic_cast<DXBuffer*>(buffer);
-	
-	mCommandList->IASetVertexBuffers(0, 1, &dxBuffer->VertexBufferView());
-}
 
-void DX12RHI::IASetIndexBuffer(Buffer* buffer)
-{
-	auto dxBuffer = dynamic_cast<DXBuffer*>(buffer);
+	mCommandList->IASetVertexBuffers(0, 1, &dxBuffer->VertexBufferView());
 	mCommandList->IASetIndexBuffer(&dxBuffer->IndexBufferView());
 }
 

@@ -129,6 +129,9 @@
     <ClCompile Include="FShadowResource.cpp">
       <Filter>Rander\Source</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="FShadowResource.h">
       <Filter>Rander\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderManager.h">
+      <Filter>Manager\Header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

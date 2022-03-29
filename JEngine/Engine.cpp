@@ -28,10 +28,10 @@ void Engine::Init(HINSTANCE hInstance)
 	//初始化Render
 	mRender = std::make_unique<FRender>();
 
-	//初始化资源管理和场景管理
+	//初始化资源管理和场景管理、shader管理
 	mAssetManager = std::make_shared<AssetManager>();
 	mSceneManager = std::make_shared<SceneManager>();
-
+	mShaderManager = std::make_unique<ShaderManager>();
 
 	//初始化Render
 	mRender->Init();
@@ -43,7 +43,7 @@ void Engine::Run(GameTimer& gt)
 {
 	gt.Reset();
 	isRuning = true;
-	mRender->RenderBegin();
+	mRender->RenderInit();
 //开始主循环
 	while (isRuning && mWindows->Run())
 	{

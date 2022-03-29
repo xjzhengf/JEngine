@@ -24,16 +24,20 @@ void FRender::Render(const GameTimer& gt)
 	SceneRender(gt);
 }
 
-void FRender::RenderBegin()
+void FRender::RenderInit()
 {
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
 		mRHI->LoadTexture(texture.get());
 	}
-	mRHI->CreateShader(mRHIResource.get(), L"..\\JEngine\\Shaders\\color.hlsl");
-	mRHI->DrawPrepare(mRHIResource.get(),mShadowResource.get());
+	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
 	mRHI->BuildPSO(mRHIResource.get(), "Scene");
-	mRHI->CreateShader(mRHIResource.get(), L"..\\JEngine\\Shaders\\Shadow.hlsl");
+	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
 	mRHI->BuildPSO(mRHIResource.get(), "ShadowMap");
+	mRHI->DrawPrepare();
+	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())
+	{
+		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get());
+	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
 }
@@ -44,25 +48,24 @@ void FRender::SceneRender(const GameTimer& gt)
 	DepthRender(gt);
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
-	mRHI->ClearRenderTargetView(std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentBackBufferView());
-	mRHI->ClearDepthStencilView(std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentDepthStencilView());
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
+	mRHI->ClearRenderTargetView(mRHIResource->CurrentBackBufferViewHand());
+	mRHI->ClearDepthStencilView(mRHIResource->CurrentDepthStencilViewHand());
 	mRHI->OMSetStencilRef(0);
-	mRHI->OMSetRenderTargets(1, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentBackBufferView(), true, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->CurrentDepthStencilView());
+	mRHI->OMSetRenderTargets(1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
 	mRHI->SetPipelineState("Scene");
 	mRHI->Update(gt);
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		mRHI->SetDescriptorHeaps(Actor.first);
 		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
-		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
+		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
 		mRHI->SetGraphicsRootDescriptorTable(Actor.first,false);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(Actor.first);
 	}
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXRHIResource>(mRHIResource)->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
 	
 	mRHI->ExecuteCommandLists();
 }
@@ -72,9 +75,9 @@ void FRender::DepthRender(const GameTimer& gt)
 
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
-	mRHI->ClearDepthStencilView(std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->DSV().ptr);
-	mRHI->OMSetRenderTargets(0, 0, false, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->DSV().ptr);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
+	mRHI->ClearDepthStencilView(std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
+	mRHI->OMSetRenderTargets(0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
 	mRHI->SetPipelineState("ShadowMap");
 	mRHI->Update(gt);
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
@@ -82,14 +85,13 @@ void FRender::DepthRender(const GameTimer& gt)
 
 		mRHI->SetDescriptorHeaps(Actor.first);
 		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
-		mRHI->IASetIndexBuffer(mRHI->CreateBuffer(mRenderResource.get()));
+		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
 		mRHI->IASetPrimitiveTopology();
 		mRHI->SetGraphicsRootDescriptorTable(Actor.first,true);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(Actor.first);
 	}
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<DXShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 	
 }
 

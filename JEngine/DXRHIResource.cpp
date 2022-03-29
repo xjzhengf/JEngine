@@ -1,28 +1,26 @@
 #include "stdafx.h"
 #include "DXRHIResource.h"
 #include "DX12RHI.h"
+#include "ShaderManager.h"
 
-void DXRHIResource::CreateShader(const std::wstring& filename)
+DXRHIResource::DXRHIResource()
 {
-	HRESULT hr = S_OK;
-	//mvsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");	
-	mvsByteCode = d3dUtil::CompileShader(filename, nullptr, "VS", "vs_5_1");
-	//mpsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
-	mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_1");
+	mResource = std::make_shared<FResource>();
 }
 
-ID3D12Resource* DXRHIResource::BackBuffer()
+std::shared_ptr<FResource> DXRHIResource::BackBuffer()
 {
-	return DX12RHI::GetDX12RHI()->CurrentBackBuffer();
+	mResource->Resource = DX12RHI::GetDX12RHI()->CurrentBackBuffer();
+	return mResource;
 }
 
-unsigned __int64 DXRHIResource::CurrentBackBufferView()
+unsigned __int64 DXRHIResource::CurrentBackBufferViewHand()
 {
 	unsigned __int64 ptr = DX12RHI::GetDX12RHI()->CurrentBackBufferView().ptr;
 	return ptr;
 }
 
-unsigned __int64 DXRHIResource::CurrentDepthStencilView()
+unsigned __int64 DXRHIResource::CurrentDepthStencilViewHand()
 {
 	unsigned __int64 ptr = DX12RHI::GetDX12RHI()->DepthStencilView().ptr;
 	return ptr;
@@ -54,12 +52,12 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildRenderPSO()
 	psoDesc.InputLayout = { mInputLayout.data(),(UINT)mInputLayout.size() };
 
 	psoDesc.VS = {
-		reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()),
-		mvsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mvsByteCode->GetBufferPointer()),
+		ShaderManager::GetShaderManager()->mvsByteCode->GetBufferSize()
 	};
 	psoDesc.PS = {
-		reinterpret_cast<BYTE*>(mpsByteCode->GetBufferPointer()),
-		mpsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mpsByteCode->GetBufferPointer()),
+		ShaderManager::GetShaderManager()->mpsByteCode->GetBufferSize()
 	};
 
 
@@ -107,12 +105,12 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 	psoDesc.InputLayout = { mInputLayout.data(),(UINT)mInputLayout.size() };
 
 	psoDesc.VS = {
-		reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()),
-		mvsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mvsByteCode->GetBufferPointer()),
+		ShaderManager::GetShaderManager()->mvsByteCode->GetBufferSize()
 	};
 	psoDesc.PS = {
-		reinterpret_cast<BYTE*>(mpsByteCode->GetBufferPointer()),
-		mpsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mpsByteCode->GetBufferPointer()),
+		ShaderManager::GetShaderManager()->mpsByteCode->GetBufferSize()
 	};
 
 

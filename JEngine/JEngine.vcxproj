@@ -167,6 +167,7 @@
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RHIResource.cpp" />
     <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
@@ -201,6 +202,7 @@
     <ClInclude Include="RenderItem.h" />
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TaskManager.h" />
     <ClInclude Include="UploadBuffer.h" />

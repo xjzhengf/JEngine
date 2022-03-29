@@ -4,6 +4,9 @@
 class FShadowResource :public FRenderResource {
 public:
 	virtual void ReleaseResource() {};
+	virtual std::shared_ptr<FResource> GetResource() =0;
+	virtual unsigned __int64 SRV() =0;
+	virtual unsigned __int64 DSV() =0;
 };
 
 class DXShadowResource :public FShadowResource {
@@ -13,9 +16,9 @@ public:
 	DXShadowResource& operator=(const DXShadowResource& rhs) = delete;
 	~DXShadowResource();
 
-	ID3D12Resource* GetResource();
-	CD3DX12_CPU_DESCRIPTOR_HANDLE& SRV() ;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE& DSV();
+	virtual std::shared_ptr<FResource> GetResource() override;
+	virtual unsigned __int64 SRV() override;
+	virtual unsigned __int64 DSV()override;
 
 	void BuildDescriptors(
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSrv,
@@ -29,6 +32,6 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE mhCpuSrv;
 	CD3DX12_GPU_DESCRIPTOR_HANDLE mhGpuSrv;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE mhCpuDsv;
-
+	std::shared_ptr<FResource> mResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap = nullptr;
 };

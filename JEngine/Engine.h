@@ -5,6 +5,7 @@
 #include "AssetManager.h"
 #include "TaskManager.h"
 #include "SceneManager.h"
+#include "ShaderManager.h"
 class Engine
 {
 public:
@@ -29,5 +30,6 @@ private:
 	std::shared_ptr<AssetManager> mAssetManager;
 	std::shared_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<TaskManager> mTaskManager;
+	std::unique_ptr<ShaderManager> mShaderManager;
 	bool isRuning;
 };

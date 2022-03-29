@@ -6,25 +6,27 @@
 DXShadowResource::DXShadowResource()
 {
 	BuildResource();
+	mResource = std::make_shared<FResource>();
 }
 
 DXShadowResource::~DXShadowResource()
 {
 }
 
-ID3D12Resource* DXShadowResource::GetResource()
+std::shared_ptr<FResource> DXShadowResource::GetResource()
 {
-	return mShadowMap.Get();
+	mResource->Resource = mShadowMap.Get();
+	return mResource;
 }
 
-CD3DX12_CPU_DESCRIPTOR_HANDLE& DXShadowResource::SRV() 
+unsigned __int64 DXShadowResource::SRV()
 {
-	return this->mhCpuSrv;
+	return this->mhCpuSrv.ptr;
 }
 
-CD3DX12_CPU_DESCRIPTOR_HANDLE& DXShadowResource::DSV()
+unsigned __int64 DXShadowResource::DSV()
 {
-	return this->mhCpuDsv;
+	return this->mhCpuDsv.ptr;
 }
 
 void DXShadowResource::BuildDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSrv, CD3DX12_GPU_DESCRIPTOR_HANDLE hGpuSrv, CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuDsv)

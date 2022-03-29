@@ -7,7 +7,7 @@ class FRender {
 public:
 	bool Init();
 	void Render(const GameTimer& gt);
-	void RenderBegin();
+	void RenderInit();
 	void SceneRender(const GameTimer& gt);
 	void DepthRender(const GameTimer& gt);
 	~FRender();
