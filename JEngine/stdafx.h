@@ -43,5 +43,6 @@
 #include "MathHelper.h"
 #include "MeshProperty.h"
 #include "D3DUtil.h"
+#include "RenderItem.h"
 #define _CRTDBG_MAP_ALLOC
 using CallBackInString = std::function<void(std::string)>;

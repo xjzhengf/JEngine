@@ -30,9 +30,9 @@ public:
 	virtual void IASetPrimitiveTopology() = 0;
 	virtual void Offset(std::string Name) = 0;
 	virtual void SetPipelineState(const std::string& Name) = 0;
-	virtual void SetGraphicsRootDescriptorTable(std::string Name, bool isDepth) {};
+	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth) {};
 	virtual void SetGraphicsRoot32BitConstants() = 0;
-	virtual void DrawIndexedInstanced(std::string Name) = 0;
+	virtual void DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) = 0;
 	virtual void ExecuteCommandLists() = 0;
 	virtual void DrawPrepare() = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
@@ -40,7 +40,7 @@ public:
 	virtual void Update(const GameTimer& gt) = 0;
 
 public:
-	virtual Buffer* CreateBuffer(FRenderResource* renderResource) = 0;
+	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) = 0;
 	virtual void CreateShader( const std::wstring& filename)=0;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* renderResource) {};
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource) {};
 };

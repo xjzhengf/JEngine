@@ -56,10 +56,10 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 private:
-	void BulidDescriptorHeaps(const std::string& Name);
-	void BulidConstantBuffers(const std::string& Name);
+	void BulidDescriptorHeaps();
+	void BulidConstantBuffers(const std::string& Name, RenderItem* renderItem);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
-	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource);
+	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem);
 	void BulidRootSignature();
 	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
 public:
@@ -77,10 +77,10 @@ public:
 	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
 	virtual void Offset(std::string Name) override;
-	virtual void SetGraphicsRootDescriptorTable(std::string Name, bool isDepth) override;
+	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth)override;
 	virtual void SetGraphicsRoot32BitConstants() override;
 	virtual void SetPipelineState(const std::string& Name) override;
-	virtual void DrawIndexedInstanced(std::string Name) override;
+	virtual void DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void Update(const GameTimer& gt) override;
@@ -88,9 +88,9 @@ public:
 	virtual void DrawPrepare() override;
 
 public:
-	virtual Buffer* CreateBuffer(FRenderResource* renderResource) override;
+	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* renderResource) override;
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -100,14 +100,17 @@ protected:
 	bool mFullscreenState = false;  //¿ªÆôÈ«ÆÁ
 
 	static DX12RHI* mDX12RHI;
-
+	int boxCBufIndex = 0;
+	int CBindex = 0;
+	SIZE_T vertexOffset =0;
+	SIZE_T indexOffset =0 ;
 	glm::vec3 cameraLoc;
 private:
 	std::map<std::string, ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
+	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
-	std::map<std::string,std::unique_ptr<UploadBuffer<ObjectConstants>>> mObjectCB ;
+    std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;
-	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
 
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
 

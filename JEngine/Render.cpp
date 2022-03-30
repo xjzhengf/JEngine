@@ -3,6 +3,7 @@
 #include "DXRHIResource.h"
 #include "FShadowResource.h"
 #include "Engine.h"
+#include "FSceneRender.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
 bool FRender::Init()
@@ -10,7 +11,7 @@ bool FRender::Init()
 	RHIFactory = std::make_unique<FRHIFactory>();
 	mRHI = RHIFactory->CreateRHI();
 	mRHIResource = RHIFactory->CreateRHIResource();
-	mRenderResource = std::make_unique<FRenderResource>();
+	mRenderResource = std::make_shared<FSceneRender>();
 	if (!mRHI->Initialize()) {
 		return false;
 	}
@@ -36,7 +37,7 @@ void FRender::RenderInit()
 	mRHI->DrawPrepare();
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())
 	{
-		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get());
+		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(),mRenderResource);
 	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
@@ -59,11 +60,11 @@ void FRender::SceneRender(const GameTimer& gt)
 	{
 		mRHI->SetDescriptorHeaps(Actor.first);
 		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
+		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource,Actor.first));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(Actor.first,false);
+		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FSceneRender>(mRenderResource)->mRenderItem[Actor.first].get(),false);
 		mRHI->SetGraphicsRoot32BitConstants();
-		mRHI->DrawIndexedInstanced(Actor.first);
+		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
 	
@@ -85,11 +86,11 @@ void FRender::DepthRender(const GameTimer& gt)
 
 		mRHI->SetDescriptorHeaps(Actor.first);
 		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource.get()));
+		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource, Actor.first));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(Actor.first,true);
+		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FSceneRender>(mRenderResource)->mRenderItem[Actor.first].get(), true);
 		mRHI->SetGraphicsRoot32BitConstants();
-		mRHI->DrawIndexedInstanced(Actor.first);
+		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 	

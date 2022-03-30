@@ -11,9 +11,10 @@ public:
 
 	int NumFramesDirty = gNumFrameResources;
 	UINT ObjCBIndex = -1;
+	UINT ObjSrvIndex = -1;
 	FMaterial* Mat = nullptr;
 	
-	std::unique_ptr<Buffer> mGeo = nullptr;
+	std::unique_ptr<DXBuffer> mGeo = nullptr;
 	// Primitive topology.
 	D3D12_PRIMITIVE_TOPOLOGY PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	UINT IndexCount = 0;

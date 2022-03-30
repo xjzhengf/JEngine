@@ -3,8 +3,8 @@
 #include "AssetManager.h"
 #include "SceneManager.h"
 const int gNumFrameResources = 3;
-std::vector<MeshData> FSceneRender::meshDataVector;
-std::vector<MeshData>& FSceneRender::BuildMeshData()
+std::unordered_map<std::string, MeshData> FSceneRender::meshDataVector;
+std::unordered_map<std::string, MeshData>& FSceneRender::BuildMeshData()
 {
 	if (!mRenderUpdate)
 	{
@@ -50,7 +50,8 @@ std::vector<MeshData>& FSceneRender::BuildMeshData()
 		{
 			meshData.vertices[i].Normal = glm::normalize(meshData.vertices[i].Normal);
 		}
-		meshDataVector.push_back(std::move(meshData));
+		meshDataVector[Actor.first] = std::move(meshData);
+		//meshDataVector.push_back(std::move(meshData));
 	}
 	mRenderUpdate = false;
 	return meshDataVector;

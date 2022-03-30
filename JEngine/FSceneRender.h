@@ -5,9 +5,9 @@
 
 class FSceneRender : public  FRenderResource{
 public:
-	std::vector<MeshData>& BuildMeshData();
+	std::unordered_map<std::string, MeshData>& BuildMeshData();
 	void BuildMaterial();
-	static std::vector<MeshData> meshDataVector;
-	RenderItem* mRenderItem;
+	static std::unordered_map<std::string,MeshData> meshDataVector;
+	std::map <std::string, std::unique_ptr<RenderItem>> mRenderItem;
 	std::unordered_map<std::string, std::unique_ptr<FMaterial>> mMaterials;
 };
