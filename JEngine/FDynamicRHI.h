@@ -28,7 +28,6 @@ public:
 	virtual void SetGraphicsRootSignature() = 0;
 	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) = 0;
 	virtual void IASetPrimitiveTopology() = 0;
-	virtual void Offset(std::string Name) = 0;
 	virtual void SetPipelineState(const std::string& Name) = 0;
 	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth) {};
 	virtual void SetGraphicsRoot32BitConstants() = 0;
@@ -37,7 +36,9 @@ public:
 	virtual void DrawPrepare() = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
 	virtual void Draw(const GameTimer& gt) = 0;
-	virtual void Update(const GameTimer& gt) = 0;
+	virtual void UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource, const std::string& Name, int CBIndex) = 0;
+	virtual void BuildRenderItem(std::shared_ptr<FRenderResource> renderResource, ActorStruct* actor, const std::string& Name) = 0;
+	virtual void BuildLight(std::shared_ptr<FRenderResource> renderResource) = 0;
 
 public:
 	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) = 0;

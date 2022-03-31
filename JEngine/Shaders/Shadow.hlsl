@@ -36,17 +36,12 @@ SamplerComparisonState gSamShadow       : register(s1);
 
 cbuffer cbPerObject : register(b0)
 {
-	float4x4 gWorldViewProj;
 	float4x4 tLightViewProj;
 	float4x4 gLightViewProj;
 	float4x4 gViewProj;
 	float4x4 gWorld;
-	float4x4 Rotation;
-	float4x4 Scale;
-	float4x4 Translate;
 	float4x4 TexTransform;
 	float Time;
-
 };
 float3 CameraLoc : register(b1);
 

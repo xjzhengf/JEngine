@@ -177,75 +177,25 @@ void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12RHI::Update(const GameTimer& gt)
+void DX12RHI::UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource,const std::string& Name,int CBIndex)
 {
+	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
-	int i = 0;
 	SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
-	for (auto&& ActorPair : SceneManager::GetSceneManager()->GetAllActor()) {
-
 		ObjectConstants objConstants;
-		glm::qua<float> q = glm::qua<float>(
-			ActorPair.second->Transform[0].Rotation.w,
-			ActorPair.second->Transform[0].Rotation.x,
-			ActorPair.second->Transform[0].Rotation.y,
-			ActorPair.second->Transform[0].Rotation.z
-			);
-
-		glm::vec3 location = glm::vec3(
-			ActorPair.second->Transform[0].Location.x,
-			ActorPair.second->Transform[0].Location.y,
-			ActorPair.second->Transform[0].Location.z
-		);
-		glm::vec3 Scale = glm::vec3(
-			ActorPair.second->Transform[0].Scale3D.x,
-			ActorPair.second->Transform[0].Scale3D.y,
-			ActorPair.second->Transform[0].Scale3D.z
-		);
-		objConstants.Rotation = glm::mat4_cast(q);
-		objConstants.Translate = glm::translate(objConstants.Translate, location);
-		objConstants.Scale = glm::scale(objConstants.Scale, Scale);
 		objConstants.Time = Time;
 		glm::mat4x4 proj = SceneManager::GetSceneManager()->GetCamera()->GetProj4x4();
 		glm::mat4x4 view = SceneManager::GetSceneManager()->GetCamera()->GetView4x4();
-
-		glm::mat4x4 W = objConstants.Translate * objConstants.Rotation * objConstants.Scale;
-		glm::mat4x4 worldViewProj = proj * view * W * mWorld;
-		objConstants.WorldViewProj = glm::transpose(worldViewProj);
 		objConstants.ViewProj = glm::transpose(proj * view);
-		float Radius = 2500;
-		glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
-
-		lightPos.x = lightPos.x * glm::cos(Time / 2) - lightPos.y * glm::sin(Time / 2);
-		lightPos.y = lightPos.y * glm::cos(Time / 2) + lightPos.x * glm::sin(Time / 2);
-		glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
-
-		float l = sphereCenterLS.x - Radius;
-		float b = sphereCenterLS.y - Radius;
-		float n = sphereCenterLS.z - Radius;
-		float r = sphereCenterLS.x + Radius;
-		float t = sphereCenterLS.y + Radius;
-		float f = sphereCenterLS.z + Radius;
-		glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
-		glm::mat4 T(
-			0.5f, 0.0f, 0.0f, 0.0f,
-			0.0f, -0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.5f, 0.5f, 0.0f, 1.0f);
-		glm::mat4x4 LightViewProj;
-
-		objConstants.TLightViewProj = glm::transpose(T * lightProj * lightView);
-		LightViewProj = lightProj * lightView;
-		objConstants.World = glm::transpose(W * mWorld);
+		objConstants.TLightViewProj = sceneResource->TLightViewProj;
+		objConstants.World = sceneResource->mRenderItem[Name]->World;
 		objConstants.directionalLight.Brightness = SceneManager::GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction = SceneManager::GetSceneManager()->DirectionalLight.Direction;
 		objConstants.directionalLight.Location = SceneManager::GetSceneManager()->DirectionalLight.Location;
-		objConstants.LightViewProj = glm::transpose(LightViewProj);
-		mObjectCB->CopyData(i, objConstants);
-		i++;
-	}
+		objConstants.LightViewProj = sceneResource->LightViewProj;
+		mObjectCB->CopyData(CBIndex, objConstants);
+	
 }
 
 void DX12RHI::Draw(const GameTimer& gt)
@@ -262,20 +212,43 @@ void DX12RHI::DrawPrepare()
 	BulidDescriptorHeaps();
 }
 
-Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderResource> renderResource,const std::string& Name)
+void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,ActorStruct* actor, const std::string& Name)
 {
 	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
-	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
-		return sceneResource->mRenderItem[Name]->mGeo.get();
-	}
-	
+	glm::qua<float> q = glm::qua<float>(
+		actor->Transform[0].Rotation.w,
+		actor->Transform[0].Rotation.x,
+		actor->Transform[0].Rotation.y,
+		actor->Transform[0].Rotation.z
+		);
+	glm::vec3 location = glm::vec3(
+		actor->Transform[0].Location.x,
+		actor->Transform[0].Location.y,
+		actor->Transform[0].Location.z
+	);
+	glm::vec3 actorScale = glm::vec3(
+		actor->Transform[0].Scale3D.x,
+		actor->Transform[0].Scale3D.y,
+		actor->Transform[0].Scale3D.z
+	);
+
+	glm::mat4x4 Rotation = glm::mat4_cast(q);
+	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
+	Translate = glm::translate(Translate, location);
+	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
+	Scale = glm::scale(Scale, actorScale);
+
+	glm::mat4x4 W = Translate * Rotation * Scale;
+	sceneResource->mRenderItem[Name]->World = glm::transpose(W * mWorld);
 
 	std::unordered_map<std::string, MeshData> meshData = sceneResource->BuildMeshData();
 
 	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
+	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
+		return;
+	}
 
-	
 	sceneResource->mRenderItem[Name]->mGeo->Name = "DX12RHI";
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU));
 	CopyMemory(sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU->GetBufferPointer(), meshData[Name].vertices.data(), vbByteSize);
@@ -296,9 +269,43 @@ Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderResource> renderResource,co
 
 	submesh.StartIndexLocation = sceneResource->mRenderItem[Name]->StartIndexLocation;
 	submesh.BaseVertexLocation = sceneResource->mRenderItem[Name]->BaseVertexLocation;
-	
-	sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name] = submesh;
 
+	sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name] = submesh;
+}
+
+void DX12RHI::BuildLight(std::shared_ptr<FRenderResource> renderResource)
+{
+	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	float Radius = 2500;
+	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
+
+	lightPos.x = lightPos.x * glm::cos(Time / 2) - lightPos.y * glm::sin(Time / 2);
+	lightPos.y = lightPos.y * glm::cos(Time / 2) + lightPos.x * glm::sin(Time / 2);
+	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
+
+	float l = sphereCenterLS.x - Radius;
+	float b = sphereCenterLS.y - Radius;
+	float n = sphereCenterLS.z - Radius;
+	float r = sphereCenterLS.x + Radius;
+	float t = sphereCenterLS.y + Radius;
+	float f = sphereCenterLS.z + Radius;
+	glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
+	glm::mat4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+	sceneResource->LightViewProj =glm::transpose(lightProj * lightView) ;
+	sceneResource->TLightViewProj = glm::transpose(T * lightProj * lightView);
+}
+
+Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderResource> renderResource,const std::string& Name)
+{
+	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
+		return sceneResource->mRenderItem[Name]->mGeo.get();
+	}
 	return sceneResource->mRenderItem[Name]->mGeo.get();
 }
 
@@ -553,11 +560,6 @@ void DX12RHI::IASetPrimitiveTopology()
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void DX12RHI::Offset(std::string Name)
-{
-	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
-	hDescriptor.Offset(1, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-}
 
 void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth)
 {

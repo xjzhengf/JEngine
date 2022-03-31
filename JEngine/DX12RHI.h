@@ -20,14 +20,10 @@ using namespace DirectX::PackedVector;
 
 
 struct ObjectConstants {
-	glm::mat4x4 WorldViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 TLightViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 LightViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 ViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
-	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
-	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
-	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
 	glm::mat4x4 TexTransform = glm::identity<glm::mat4x4>();
 	float Time = 0.0f;
 	FDirectionalLight directionalLight;
@@ -76,17 +72,17 @@ public:
 	virtual void SetGraphicsRootSignature() override;
 	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) override;
 	virtual void IASetPrimitiveTopology() override;
-	virtual void Offset(std::string Name) override;
 	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth)override;
 	virtual void SetGraphicsRoot32BitConstants() override;
 	virtual void SetPipelineState(const std::string& Name) override;
 	virtual void DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void Update(const GameTimer& gt) override;
+	virtual void UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource, const std::string& Name, int CBIndex) override;
 	virtual void Draw(const GameTimer& gt) override;
 	virtual void DrawPrepare() override;
-
+	virtual void BuildRenderItem(std::shared_ptr<FRenderResource> renderResource, ActorStruct* actor, const std::string& Name)override;
+	virtual void BuildLight(std::shared_ptr<FRenderResource> renderResource) override;
 public:
 	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
