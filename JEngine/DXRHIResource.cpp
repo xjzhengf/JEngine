@@ -26,7 +26,7 @@ unsigned __int64 DXRHIResource::CurrentDepthStencilViewHand()
 	return ptr;
 }
 
-D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildPSO(const std::string& Name)
+D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::CreatePSO(const std::string& Name)
 {
 	if (Name == "Scene") {
 		return BuildRenderPSO();
@@ -59,32 +59,11 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildRenderPSO()
 		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mpsByteCode->GetBufferPointer()),
 		ShaderManager::GetShaderManager()->mpsByteCode->GetBufferSize()
 	};
-
-
-	D3D12_DEPTH_STENCIL_DESC stencilDesc;
-	//反面
-	stencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
-	stencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_INCR;
-	stencilDesc.DepthEnable = true;
-	stencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-	stencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	//正面
-	stencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	stencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_INCR;
-	stencilDesc.StencilEnable = true;
-	stencilDesc.StencilReadMask = 0xff;
-	stencilDesc.StencilWriteMask = 0xff;
-
-
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
-	psoDesc.DepthStencilState = stencilDesc;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
@@ -112,28 +91,6 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 		reinterpret_cast<BYTE*>(ShaderManager::GetShaderManager()->mpsByteCode->GetBufferPointer()),
 		ShaderManager::GetShaderManager()->mpsByteCode->GetBufferSize()
 	};
-
-
-	D3D12_DEPTH_STENCIL_DESC stencilDesc;
-	//反面
-	stencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
-	stencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_INCR;
-	stencilDesc.DepthEnable = true;
-	stencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-	stencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	
-	//正面
-	stencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	stencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	stencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_INCR;
-	stencilDesc.StencilEnable = true;
-	stencilDesc.StencilReadMask = 0xff;
-	stencilDesc.StencilWriteMask = 0xff;
-
-
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
 	psoDesc.RasterizerState.DepthBias = 100000;
@@ -141,7 +98,7 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 	psoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
-	psoDesc.DepthStencilState = stencilDesc;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 0;

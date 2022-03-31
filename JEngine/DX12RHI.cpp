@@ -340,14 +340,13 @@ void DX12RHI::BulidConstantBuffers(const std::string& Name,RenderItem* renderIte
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
-	hDescriptor.Offset(boxCBufIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	hDescriptor.Offset(offsetIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	cbAddress += CBindex * objecBByteSize;
-	renderItem->ObjCBIndex = boxCBufIndex;
+	renderItem->ObjCBIndex = offsetIndex;
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 	cbvDesc.BufferLocation = cbAddress;
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 	md3dDevice->CreateConstantBufferView(&cbvDesc, hDescriptor);
-	boxCBufIndex++;
 	CBindex++;
 }
 
@@ -360,9 +359,9 @@ void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResou
 
 void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem)
 {
-	renderItem->ObjSrvIndex = boxCBufIndex;
+	renderItem->ObjSrvIndex = ++offsetIndex;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
-	hDescriptor.Offset(boxCBufIndex, mCbvSrvUavDescriptorSize);
+	hDescriptor.Offset(offsetIndex, mCbvSrvUavDescriptorSize);
 	std::string ResourceName;
 	//消除虚幻导出的'\0'
 	std::string str(Name.c_str());
@@ -386,9 +385,9 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	srvDesc.Texture2D.MipLevels = woodCrateTex->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	md3dDevice->CreateShaderResourceView(woodCrateTex.Get(), &srvDesc, hDescriptor);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
-	hDescriptor2.Offset(boxCBufIndex+1, mCbvSrvUavDescriptorSize);
 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
+	hDescriptor2.Offset(++offsetIndex, mCbvSrvUavDescriptorSize);
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.Format = woodCrateNormal->GetDesc().Format;
@@ -401,19 +400,17 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	auto srvCpuStart = mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart();
 	auto srvGpuStart = mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart();
 	auto dsvCpuStart = mDsvHeap->GetCPUDescriptorHandleForHeapStart();
-	boxCBufIndex=boxCBufIndex + 2;
 	  dynamic_cast<DXShadowResource*>(RenderResource)->BuildDescriptors(
-		CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, boxCBufIndex, mCbvSrvUavDescriptorSize),
-		CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, boxCBufIndex, mCbvSrvUavDescriptorSize),
+		CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, ++offsetIndex, mCbvSrvUavDescriptorSize),
+		CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 1, mDsvDescriptorSize));
-	 boxCBufIndex++;
+	 offsetIndex++;
 }
 
 
 
 void DX12RHI::BulidRootSignature()
 {
-	
 	ThrowIfFailed(md3dDevice->CreateRootSignature(0, ShaderManager::GetShaderManager()->mvsByteCode->GetBufferPointer(), ShaderManager::GetShaderManager()->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
 
@@ -422,7 +419,7 @@ void DX12RHI::BulidRootSignature()
 void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOName)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
-	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->BuildPSO(PSOName);
+	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->CreatePSO(PSOName);
 	PSOState.pRootSignature = mRootSigmature.Get();
 	PSOState.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	PSOState.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;

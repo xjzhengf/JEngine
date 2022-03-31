@@ -96,15 +96,13 @@ protected:
 	bool mFullscreenState = false;  //¿ªÆôÈ«ÆÁ
 
 	static DX12RHI* mDX12RHI;
-	int boxCBufIndex = 0;
+	int offsetIndex = 0;
 	int CBindex = 0;
 	SIZE_T vertexOffset =0;
 	SIZE_T indexOffset =0 ;
 	glm::vec3 cameraLoc;
 private:
-	std::map<std::string, ComPtr<ID3D12DescriptorHeap>> mCbvSrvHeap ;
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
-	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;
 
@@ -159,7 +157,6 @@ protected:
 	int mCurrBackBuffer = 0;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
-	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap;
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mRtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>mDsvHeap;

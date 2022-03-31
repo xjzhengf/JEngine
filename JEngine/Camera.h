@@ -73,8 +73,8 @@ private:
 	
 	bool mViewDirty = true;
 
-	float mCameraMoveSpeed = 30.0f;
-	float mCameraMoveMaxSpeed = 100.0f;
+	float mCameraMoveSpeed = 100.0f;
+	float mCameraMoveMaxSpeed = 200.0f;
 	float mCameraMoveMinSpeed = 10.0f;
 	glm::mat4x4 mView = glm::identity<glm::mat4x4>();
 	glm::mat4x4 mProj = glm::identity<glm::mat4x4>();

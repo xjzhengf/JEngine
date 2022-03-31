@@ -5,6 +5,7 @@ public:
 	void CreateShader(const std::wstring& filename);
 	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
+
 	static ShaderManager* GetShaderManager();
 	ShaderManager();
 	~ShaderManager();

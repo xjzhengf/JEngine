@@ -87,27 +87,27 @@ void FirstPersonCamera::OnMouseUp(int x, int y)
 bool FirstPersonCamera::CameraMove(const std::string& MouseKey,const WPARAM& wParam, LPARAM lParam)
 {
 	if (wParam == 'A') {
-		Strafe(-1.0f * (GetCameraSpeed()));
+		Strafe(-0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (wParam == 'S') {
-		Walk(-1.0f * (GetCameraSpeed()));
+		Walk(-0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (wParam == 'D') {
-		Strafe(1.0f * (GetCameraSpeed()));
+		Strafe(0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (wParam == 'W') {
-		Walk(1.0f * (GetCameraSpeed()));
+		Walk(0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (wParam == 'E') {
-		UpDown(1.0f * (GetCameraSpeed()));
+		UpDown(0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (wParam == 'Q') {
-		UpDown(-1.0f * (GetCameraSpeed()));
+		UpDown(-0.5f * (GetCameraSpeed()));
 		return true;
 	}
 	if (MouseKey == "MouseMove") {

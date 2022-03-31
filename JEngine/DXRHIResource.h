@@ -9,7 +9,7 @@ public:
 
 	virtual unsigned __int64  CurrentBackBufferViewHand()override;
 	virtual unsigned __int64  CurrentDepthStencilViewHand()override;
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildPSO(const std::string& Name);
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC CreatePSO(const std::string& Name);
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildRenderPSO();
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC BuildDepthPSO();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
