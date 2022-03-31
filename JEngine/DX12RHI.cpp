@@ -316,7 +316,6 @@ void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Act
 	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
 	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
 	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource->mRenderItem[ActorName].get());
-
 }
 
 
@@ -361,7 +360,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 {
 	renderItem->ObjSrvIndex = boxCBufIndex;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
-	hDescriptor.Offset(boxCBufIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	hDescriptor.Offset(boxCBufIndex, mCbvSrvUavDescriptorSize);
 	std::string ResourceName;
 	//消除虚幻导出的'\0'
 	std::string str(Name.c_str());
@@ -385,7 +384,8 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	srvDesc.Texture2D.MipLevels = woodCrateTex->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	md3dDevice->CreateShaderResourceView(woodCrateTex.Get(), &srvDesc, hDescriptor);
-	hDescriptor.Offset(boxCBufIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
+	hDescriptor2.Offset(boxCBufIndex+1, mCbvSrvUavDescriptorSize);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -394,7 +394,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	srvDesc2.Texture2D.MostDetailedMip = 0;
 	srvDesc2.Texture2D.MipLevels = woodCrateNormal->GetDesc().MipLevels;
 	srvDesc2.Texture2D.ResourceMinLODClamp = 0.0f;
-	md3dDevice->CreateShaderResourceView(woodCrateNormal.Get(), &srvDesc2, hDescriptor);
+	md3dDevice->CreateShaderResourceView(woodCrateNormal.Get(), &srvDesc2, hDescriptor2);
 
 	auto srvCpuStart = mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart();
 	auto srvGpuStart = mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart();
@@ -567,8 +567,9 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 	hDescriptor.Offset(renderItem->ObjCBIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	mCommandList->SetGraphicsRootDescriptorTable(0, hDescriptor);
 	if (!isDepth) {
-		hDescriptor.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
+		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
+		hDescriptor2.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor2);
 	}
 }
 
