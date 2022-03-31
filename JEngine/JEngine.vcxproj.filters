@@ -132,6 +132,9 @@
     <ClCompile Include="ShaderManager.cpp">
       <Filter>Manager\Source</Filter>
     </ClCompile>
+    <ClCompile Include="HeapManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -231,6 +234,9 @@
       <Filter>Rander\Header</Filter>
     </ClInclude>
     <ClInclude Include="ShaderManager.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="HeapManager.h">
       <Filter>Manager\Header</Filter>
     </ClInclude>
   </ItemGroup>

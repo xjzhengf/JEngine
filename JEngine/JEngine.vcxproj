@@ -162,6 +162,7 @@
     <ClCompile Include="FShadowResource.cpp" />
     <ClCompile Include="FTexture.cpp" />
     <ClCompile Include="GameTimer.cpp" />
+    <ClCompile Include="HeapManager.cpp" />
     <ClCompile Include="LauncherPCWindow.cpp" />
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="Render.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="FShadowResource.h" />
     <ClInclude Include="FTexture.h" />
     <ClInclude Include="GameTimer.h" />
+    <ClInclude Include="HeapManager.h" />
     <ClInclude Include="LauncherPCWindow.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MathHelper.h" />
