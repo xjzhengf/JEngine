@@ -5,7 +5,7 @@
 #include "ShaderManager.h"
 #include "Engine.h"
 #include "DXRHIResource.h"
-#include "FSceneRender.h"
+#include "FRenderScene.h"
 #include "FShadowResource.h"
 DX12RHI* DX12RHI::mDX12RHI = nullptr;
 DX12RHI::DX12RHI() 
@@ -179,7 +179,7 @@ void DX12RHI::SetClientHeight(int Height)
 }
 void DX12RHI::UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource,const std::string& Name,int CBIndex)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	Time = gt.TotalTime();
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
 	SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
@@ -214,7 +214,7 @@ void DX12RHI::DrawPrepare()
 
 void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,ActorStruct* actor, const std::string& Name)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	glm::qua<float> q = glm::qua<float>(
 		actor->Transform[0].Rotation.w,
 		actor->Transform[0].Rotation.x,
@@ -240,15 +240,13 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,Ac
 
 	glm::mat4x4 W = Translate * Rotation * Scale;
 	sceneResource->mRenderItem[Name]->World = glm::transpose(W * mWorld);
-
+	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
+		return;
+	}
 	std::unordered_map<std::string, MeshData> meshData = sceneResource->BuildMeshData();
 
 	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
-	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
-		return;
-	}
-
 	sceneResource->mRenderItem[Name]->mGeo->Name = "DX12RHI";
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU));
 	CopyMemory(sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU->GetBufferPointer(), meshData[Name].vertices.data(), vbByteSize);
@@ -275,7 +273,7 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,Ac
 
 void DX12RHI::BuildLight(std::shared_ptr<FRenderResource> renderResource)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	float Radius = 2500;
 	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
 
@@ -302,10 +300,7 @@ void DX12RHI::BuildLight(std::shared_ptr<FRenderResource> renderResource)
 
 Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderResource> renderResource,const std::string& Name)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
-	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
-		return sceneResource->mRenderItem[Name]->mGeo.get();
-	}
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	return sceneResource->mRenderItem[Name]->mGeo.get();
 }
 
@@ -317,7 +312,7 @@ void DX12RHI::CreateShader(const std::wstring& filename)
 
 void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	sceneResource->mRenderItem[ActorName] = std::make_unique<RenderItem>();
 	sceneResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
 	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
@@ -587,7 +582,7 @@ void DX12RHI::SetPipelineState(const std::string& Name)
 
 void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FSceneRender>(renderResource);
+	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	mCommandList->DrawIndexedInstanced(sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].IndexCount, 1,
 		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].StartIndexLocation,
 		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].BaseVertexLocation, 0);

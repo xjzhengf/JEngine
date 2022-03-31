@@ -158,7 +158,7 @@
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="FRenderResource.cpp" />
     <ClCompile Include="FRHIFactory.cpp" />
-    <ClCompile Include="FSceneRender.cpp" />
+    <ClCompile Include="FRenderScene.cpp" />
     <ClCompile Include="FShadowResource.cpp" />
     <ClCompile Include="FTexture.cpp" />
     <ClCompile Include="GameTimer.cpp" />
@@ -189,7 +189,7 @@
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="FRenderResource.h" />
     <ClInclude Include="FRHIFactory.h" />
-    <ClInclude Include="FSceneRender.h" />
+    <ClInclude Include="FRenderScene.h" />
     <ClInclude Include="FShadowResource.h" />
     <ClInclude Include="FTexture.h" />
     <ClInclude Include="GameTimer.h" />

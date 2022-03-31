@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "FSceneRender.h"
+#include "FRenderScene.h"
 #include "AssetManager.h"
 #include "SceneManager.h"
 const int gNumFrameResources = 3;
-std::unordered_map<std::string, MeshData> FSceneRender::meshDataVector;
-std::unordered_map<std::string, MeshData>& FSceneRender::BuildMeshData()
+std::unordered_map<std::string, MeshData> FRenderScene::meshDataVector;
+std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 {
 	if (!mRenderUpdate)
 	{
@@ -57,7 +57,7 @@ std::unordered_map<std::string, MeshData>& FSceneRender::BuildMeshData()
 	return meshDataVector;
 }
 
-void FSceneRender::BuildMaterial()
+void FRenderScene::BuildMaterial()
 {
 	auto grass = std::make_unique<FMaterial>();
 	grass->Name = "Grass";

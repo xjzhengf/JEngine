@@ -123,7 +123,7 @@
     <ClCompile Include="FRHIFactory.cpp">
       <Filter>RHI\Source</Filter>
     </ClCompile>
-    <ClCompile Include="FSceneRender.cpp">
+    <ClCompile Include="FRenderScene.cpp">
       <Filter>Rander\Source</Filter>
     </ClCompile>
     <ClCompile Include="FShadowResource.cpp">
@@ -215,7 +215,7 @@
     <ClInclude Include="FRHIFactory.h">
       <Filter>RHI\Header</Filter>
     </ClInclude>
-    <ClInclude Include="FSceneRender.h">
+    <ClInclude Include="FRenderScene.h">
       <Filter>Rander\Header</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">

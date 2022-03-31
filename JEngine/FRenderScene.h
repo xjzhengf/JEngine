@@ -3,7 +3,7 @@
 #include "FRenderResource.h"
 #include "RenderItem.h"
 
-class FSceneRender : public  FRenderResource{
+class FRenderScene : public  FRenderResource{
 public:
 	std::unordered_map<std::string, MeshData>& BuildMeshData();
 	void BuildMaterial();

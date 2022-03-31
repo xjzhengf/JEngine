@@ -3,7 +3,7 @@
 #include "DXRHIResource.h"
 #include "FShadowResource.h"
 #include "Engine.h"
-#include "FSceneRender.h"
+#include "FRenderScene.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
 bool FRender::Init()
@@ -11,7 +11,7 @@ bool FRender::Init()
 	RHIFactory = std::make_unique<FRHIFactory>();
 	mRHI = RHIFactory->CreateRHI();
 	mRHIResource = RHIFactory->CreateRHIResource();
-	mRenderResource = std::make_shared<FSceneRender>();
+	mRenderResource = std::make_shared<FRenderScene>();
 	if (!mRHI->Initialize()) {
 		return false;
 	}
@@ -70,7 +70,7 @@ void FRender::SceneRender(const GameTimer& gt)
 		mRHI->SetGraphicsRootSignature();
 		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource,Actor.first));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FSceneRender>(mRenderResource)->mRenderItem[Actor.first].get(),false);
+		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FRenderScene>(mRenderResource)->mRenderItem[Actor.first].get(),false);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
 	}
@@ -93,7 +93,7 @@ void FRender::DepthRender(const GameTimer& gt)
 		mRHI->SetGraphicsRootSignature();
 		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource, Actor.first));
 		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FSceneRender>(mRenderResource)->mRenderItem[Actor.first].get(), true);
+		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FRenderScene>(mRenderResource)->mRenderItem[Actor.first].get(), true);
 		mRHI->SetGraphicsRoot32BitConstants();
 		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
 	}
