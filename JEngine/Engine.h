@@ -21,6 +21,7 @@ public:
 	std::shared_ptr<WindowBase> GetWindow();
 	bool GetRuningState();
 	void SetRuningState(bool state);
+	float Time;
 protected:
 
 	static Engine* mEngine;

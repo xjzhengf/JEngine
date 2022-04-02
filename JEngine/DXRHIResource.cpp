@@ -25,7 +25,7 @@ unsigned __int64 DXRHIResource::CurrentDepthStencilViewHand()
 	unsigned __int64 ptr = DX12RHI::GetDX12RHI()->DepthStencilView().ptr;
 	return ptr;
 }
-
+/*
 D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::CreatePSO(const std::string& Name)
 {
 	if (Name == "Scene") {
@@ -106,3 +106,4 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC DXRHIResource::BuildDepthPSO()
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	return psoDesc;
 }
+*/

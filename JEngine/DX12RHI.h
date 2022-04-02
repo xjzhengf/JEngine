@@ -9,6 +9,7 @@
 #include "UploadBuffer.h"
 #include "Buffer.h"
 #include "FDirectionalLightProperty.h"
+#include "ShaderManager.h"
 #include "Material.h"
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
@@ -56,37 +57,44 @@ private:
 	void BulidConstantBuffers(const std::string& Name, RenderItem* renderItem);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem);
-	void BulidRootSignature();
+	void BulidRootSignature(FShader* shader);
 	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
+
+public:
+	void IASetVertexAndIndexBuffers(Buffer* buffer);
+	void IASetPrimitiveTopology();
+	void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth);
+	void DrawIndexedInstanced(std::shared_ptr<FRenderScene> renderResource, const std::string& Name);
+	void SetGraphicsRoot32BitConstants();
+	void ClearRenderTargetView(unsigned __int64 ptr);
+	void ClearDepthStencilView(unsigned __int64 ptr);
+	void OMSetStencilRef(int StencilRef);
+	void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr);
+	void SetDescriptorHeaps();
+	void SetGraphicsRootSignature();
+	void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, int CBIndex);
+	void BuildRenderItem(std::shared_ptr<FRenderScene> renderResource, const std::string& Name);
 public:
 	//override RHI
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
-	virtual void ClearRenderTargetView(unsigned __int64 ptr) override;
-	virtual void ClearDepthStencilView(unsigned __int64 ptr) override;
-	virtual void OMSetStencilRef(int StencilRef) override;
-	virtual void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr)override;
-	virtual void SetDescriptorHeaps(std::string Name) override;
-	virtual void SetGraphicsRootSignature() override;
-	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) override;
-	virtual void IASetPrimitiveTopology() override;
-	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth)override;
-	virtual void SetGraphicsRoot32BitConstants() override;
 	virtual void SetPipelineState(const std::string& Name) override;
-	virtual void DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource, const std::string& Name, int CBIndex) override;
-	virtual void Draw(const GameTimer& gt) override;
+
 	virtual void DrawPrepare() override;
-	virtual void BuildRenderItem(std::shared_ptr<FRenderResource> renderResource, ActorStruct* actor, const std::string& Name)override;
-	virtual void BuildLight(std::shared_ptr<FRenderResource> renderResource) override;
+
+
+	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex) override;
+	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth) override;
+	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
+		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;
 public:
-	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) override;
+	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderScene> renderResource, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource) override;
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 
@@ -121,9 +129,6 @@ private:
 	UINT m4xMsaaQuality = 0;
 
 	std::unordered_map<std::string,ComPtr<ID3D12PipelineState>> mPSO ;
-
-	glm::mat4x4 mWorld = glm::identity<glm::mat4x4>();
-
 	POINT mLastMousePos;
 
 	/*std::vector<MeshData> meshDataVector;*/

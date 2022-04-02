@@ -3,7 +3,6 @@
 #include "DXRHIResource.h"
 #include "FShadowResource.h"
 #include "Engine.h"
-#include "FRenderScene.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
 bool FRender::Init()
@@ -20,9 +19,9 @@ bool FRender::Init()
 }
 
 
-void FRender::Render(const GameTimer& gt)
+void FRender::Render()
 {
-	SceneRender(gt);
+	SceneRender();
 }
 
 void FRender::RenderInit()
@@ -43,60 +42,106 @@ void FRender::RenderInit()
 	mRHI->IsRunDrawPrepare = false;
 }
 
-void FRender::SceneRender(const GameTimer& gt)
+void FRender::SceneRender()
 {
 	mRHI->ResetCommand("Scene"); 
-	mRHI->BuildLight(mRenderResource);
+	BuildLight(mRenderResource);
+	BuildRenderItemTrans(mRenderResource);
 	int CBIndex = 0;
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
-		mRHI->BuildRenderItem(mRenderResource, Actor.second, Actor.first);
-		mRHI->UpdateCB(gt, mRenderResource, Actor.first, CBIndex);
+		//RenderFrameBegin
+		mRHI->RenderFrameBegin(mRenderResource, Actor.first, CBIndex);
 		CBIndex++;
 	}
-	DepthRender(gt);
+	//SetViewportAndScissorRect
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
+	//DrawShadow
+	DepthRender();
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
-	mRHI->ClearRenderTargetView(mRHIResource->CurrentBackBufferViewHand());
-	mRHI->ClearDepthStencilView(mRHIResource->CurrentDepthStencilViewHand());
-	mRHI->OMSetStencilRef(0);
-	mRHI->OMSetRenderTargets(1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
-	mRHI->SetPipelineState("Scene");
-
-	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
+	//ClearAndSetRenderTatget
+	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
+		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
+	//DrawMesh
+	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->SetDescriptorHeaps(Actor.first);
-		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource,Actor.first));
-		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FRenderScene>(mRenderResource)->mRenderItem[Actor.first].get(),false);
-		mRHI->SetGraphicsRoot32BitConstants();
-		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
+		mRHI->SetPipelineState("Scene");
+		mRHI->DrawMesh(mRenderResource, RenderItem.first,false);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
+	//RenderFrameEnd
 	mRHI->ExecuteCommandLists();
 }
 
-void FRender::DepthRender(const GameTimer& gt)
+void FRender::DepthRender()
 {
-	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
-	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
-	mRHI->ClearDepthStencilView(std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
-	mRHI->OMSetRenderTargets(0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
-	mRHI->SetPipelineState("ShadowMap");
-	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
+	//SetRenderTatget
+	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV(),
+		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
+	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->SetDescriptorHeaps(Actor.first);
-		mRHI->SetGraphicsRootSignature();
-		mRHI->IASetVertexAndIndexBuffers(mRHI->CreateBuffer(mRenderResource, Actor.first));
-		mRHI->IASetPrimitiveTopology();
-		mRHI->SetGraphicsRootDescriptorTable(std::dynamic_pointer_cast<FRenderScene>(mRenderResource)->mRenderItem[Actor.first].get(), true);
-		mRHI->SetGraphicsRoot32BitConstants();
-		mRHI->DrawIndexedInstanced(mRenderResource,Actor.first);
+		mRHI->SetPipelineState("ShadowMap");
+		mRHI->DrawMesh(mRenderResource, RenderItem.first,true);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+}
+
+void FRender::BuildLight(std::shared_ptr<FRenderScene> sceneResource)
+{
+	float Radius = 2500;
+	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
+
+	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
+
+	float l = sphereCenterLS.x - Radius;
+	float b = sphereCenterLS.y - Radius;
+	float n = sphereCenterLS.z - Radius;
+	float r = sphereCenterLS.x + Radius;
+	float t = sphereCenterLS.y + Radius;
+	float f = sphereCenterLS.z + Radius;
+	glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
+	glm::mat4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+	sceneResource->LightViewProj = glm::transpose(lightProj * lightView);
+	sceneResource->TLightViewProj = glm::transpose(T * lightProj * lightView);
+}
+
+void FRender::BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource)
+{
+	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
+	{
+		glm::qua<float> q = glm::qua<float>(
+			Actor.second->Transform[0].Rotation.w,
+			Actor.second->Transform[0].Rotation.x,
+			Actor.second->Transform[0].Rotation.y,
+			Actor.second->Transform[0].Rotation.z
+			);
+		glm::vec3 location = glm::vec3(
+			Actor.second->Transform[0].Location.x,
+			Actor.second->Transform[0].Location.y,
+			Actor.second->Transform[0].Location.z
+		);
+		glm::vec3 actorScale = glm::vec3(
+			Actor.second->Transform[0].Scale3D.x,
+			Actor.second->Transform[0].Scale3D.y,
+			Actor.second->Transform[0].Scale3D.z
+		);
+
+		glm::mat4x4 Rotation = glm::mat4_cast(q);
+		glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
+		Translate = glm::translate(Translate, location);
+		glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
+		Scale = glm::scale(Scale, actorScale);
+
+		glm::mat4x4 W = Translate * Rotation * Scale;
+		sceneResource->mRenderItem[Actor.first]->World = glm::transpose(W * mWorld);
+	}
 }
 
 FRender::~FRender()

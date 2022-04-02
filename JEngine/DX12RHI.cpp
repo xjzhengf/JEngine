@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "AssetManager.h"
 #include "ShaderManager.h"
+
 #include "Engine.h"
 #include "DXRHIResource.h"
 #include "FRenderScene.h"
@@ -177,10 +178,9 @@ void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12RHI::UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource,const std::string& Name,int CBIndex)
+void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name,int CBIndex)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
-	Time = gt.TotalTime();
+	Time = Engine::GetEngine()->Time;
 	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
 	SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
@@ -198,11 +198,6 @@ void DX12RHI::UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> ren
 	
 }
 
-void DX12RHI::Draw(const GameTimer& gt)
-{
-	ThrowIfFailed(mSwapChain->Present(0, 0));
-	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
-}
 
 void DX12RHI::DrawPrepare()
 {
@@ -212,34 +207,9 @@ void DX12RHI::DrawPrepare()
 	BulidDescriptorHeaps();
 }
 
-void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,ActorStruct* actor, const std::string& Name)
+void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
-	glm::qua<float> q = glm::qua<float>(
-		actor->Transform[0].Rotation.w,
-		actor->Transform[0].Rotation.x,
-		actor->Transform[0].Rotation.y,
-		actor->Transform[0].Rotation.z
-		);
-	glm::vec3 location = glm::vec3(
-		actor->Transform[0].Location.x,
-		actor->Transform[0].Location.y,
-		actor->Transform[0].Location.z
-	);
-	glm::vec3 actorScale = glm::vec3(
-		actor->Transform[0].Scale3D.x,
-		actor->Transform[0].Scale3D.y,
-		actor->Transform[0].Scale3D.z
-	);
 
-	glm::mat4x4 Rotation = glm::mat4_cast(q);
-	glm::mat4x4 Translate = glm::identity<glm::mat4x4>();
-	Translate = glm::translate(Translate, location);
-	glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
-	Scale = glm::scale(Scale, actorScale);
-
-	glm::mat4x4 W = Translate * Rotation * Scale;
-	sceneResource->mRenderItem[Name]->World = glm::transpose(W * mWorld);
 	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
 		return;
 	}
@@ -247,7 +217,7 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,Ac
 
 	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
-	sceneResource->mRenderItem[Name]->mGeo->Name = "DX12RHI";
+	sceneResource->mRenderItem[Name]->mGeo->Name = Name;
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU));
 	CopyMemory(sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU->GetBufferPointer(), meshData[Name].vertices.data(), vbByteSize);
 
@@ -271,48 +241,44 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderResource> renderResource,Ac
 	sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name] = submesh;
 }
 
-void DX12RHI::BuildLight(std::shared_ptr<FRenderResource> renderResource)
+void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
-	float Radius = 2500;
-	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
-
-	lightPos.x = lightPos.x * glm::cos(Time / 2) - lightPos.y * glm::sin(Time / 2);
-	lightPos.y = lightPos.y * glm::cos(Time / 2) + lightPos.x * glm::sin(Time / 2);
-	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
-
-	float l = sphereCenterLS.x - Radius;
-	float b = sphereCenterLS.y - Radius;
-	float n = sphereCenterLS.z - Radius;
-	float r = sphereCenterLS.x + Radius;
-	float t = sphereCenterLS.y + Radius;
-	float f = sphereCenterLS.z + Radius;
-	glm::mat4x4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
-	glm::mat4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-	sceneResource->LightViewProj =glm::transpose(lightProj * lightView) ;
-	sceneResource->TLightViewProj = glm::transpose(T * lightProj * lightView);
+	BuildRenderItem(renderResource, ActorName);
+	UpdateCB(renderResource, ActorName, RenderItemIndex);
 }
 
-Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderResource> renderResource,const std::string& Name)
+void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
+	IASetVertexAndIndexBuffers(CreateBuffer(renderResource, renderItemName));
+	IASetPrimitiveTopology();
+	SetGraphicsRootDescriptorTable(renderResource->mRenderItem[renderItemName].get(), IsDrawDepth);
+	DrawIndexedInstanced(renderResource, renderItemName);
+}
+
+void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand, bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand)
+{
+	ClearRenderTargetView(ClearRenderTargetHand);
+	ClearDepthStencilView(ClearDepthStencilHand);
+	OMSetRenderTargets(numTatgetDescriptors, SetRenderTargetHand, RTsSingleHandleToDescriptorRange, SetDepthStencilHand);
+	SetDescriptorHeaps();
+	SetGraphicsRootSignature();
+}
+
+
+
+Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name)
+{
 	return sceneResource->mRenderItem[Name]->mGeo.get();
 }
 
 
 void DX12RHI::CreateShader(const std::wstring& filename)
 {
-	ShaderManager::GetShaderManager()->CreateShader(filename);
+	ShaderManager::GetShaderManager()->CompileShader(filename);
 }
 
-void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource)
+void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	sceneResource->mRenderItem[ActorName] = std::make_unique<RenderItem>();
 	sceneResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
 	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
@@ -328,7 +294,6 @@ void DX12RHI::BulidDescriptorHeaps()
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
-	//ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeap[Name])));
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvSrvHeaps)));
 
 }
@@ -409,21 +374,21 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 
 
 
-void DX12RHI::BulidRootSignature()
+void DX12RHI::BulidRootSignature(FShader* shader)
 {
-	ThrowIfFailed(md3dDevice->CreateRootSignature(0, ShaderManager::GetShaderManager()->mvsByteCode->GetBufferPointer(), ShaderManager::GetShaderManager()->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
+	ThrowIfFailed(md3dDevice->CreateRootSignature(0, shader->mvsByteCode->GetBufferPointer(), shader->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
 
 
 
-void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOName)
+void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOType)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
-	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->CreatePSO(PSOName);
+	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->CreatePSO(PSOType);
 	PSOState.pRootSignature = mRootSigmature.Get();
 	PSOState.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	PSOState.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[PSOName])));
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[PSOType])));
 }
 
 void DX12RHI::LoadTexture(FTexture* TextureResource)
@@ -527,7 +492,7 @@ void DX12RHI::OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTpt
 	mCommandList->OMSetRenderTargets(numTatgetDescriptors, RThandle.get(), RTsSingleHandleToDescriptorRange, DShandle.get());
 }
 
-void DX12RHI::SetDescriptorHeaps(std::string Name)
+void DX12RHI::SetDescriptorHeaps()
 {
 	//ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeap[Name].Get() };
 	ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvHeaps.Get() };
@@ -565,6 +530,7 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 		hDescriptor2.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor2);
 	}
+	SetGraphicsRoot32BitConstants();
 }
 
 void DX12RHI::SetGraphicsRoot32BitConstants()
@@ -577,9 +543,8 @@ void DX12RHI::SetPipelineState(const std::string& Name)
 	mCommandList->SetPipelineState(mPSO[Name].Get());
 }
 
-void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name)
+void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)
 {
-	auto  sceneResource = std::dynamic_pointer_cast<FRenderScene>(renderResource);
 	mCommandList->DrawIndexedInstanced(sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].IndexCount, 1,
 		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].StartIndexLocation,
 		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].BaseVertexLocation, 0);

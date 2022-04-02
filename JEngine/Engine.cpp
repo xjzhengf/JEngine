@@ -58,7 +58,8 @@ void Engine::RenderTick(GameTimer& gt)
 {
 	mWindows->CalculateFrameStats(gt);
 	gt.Tick();
-	mRender->Render(gt);
+	Time = gt.TotalTime();
+	mRender->Render();
 }
 
 

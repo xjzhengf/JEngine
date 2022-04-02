@@ -135,6 +135,12 @@
     <ClCompile Include="HeapManager.cpp">
       <Filter>Manager\Source</Filter>
     </ClCompile>
+    <ClCompile Include="FPSO.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialManager.cpp">
+      <Filter>Manager\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -237,6 +243,12 @@
       <Filter>Manager\Header</Filter>
     </ClInclude>
     <ClInclude Include="HeapManager.h">
+      <Filter>Manager\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSO.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialManager.h">
       <Filter>Manager\Header</Filter>
     </ClInclude>
   </ItemGroup>

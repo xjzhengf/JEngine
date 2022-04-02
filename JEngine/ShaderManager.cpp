@@ -1,14 +1,21 @@
 #include "stdafx.h"
 #include "ShaderManager.h"
 ShaderManager* ShaderManager::mShaderManager = nullptr;
-void ShaderManager::CreateShader(const std::wstring& filename)
+const FShader& ShaderManager::CompileShader(const std::wstring& filename)
 {
-#ifdef _WIN32
-	mvsByteCode = d3dUtil::CompileShader(filename, nullptr, "VS", "vs_5_1");
-	//mpsByteCode = d3dUtil::CompileShader(L"..\\JEngine\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
-	mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_1");
+	if (!mShaderResult.empty())
+	{
+		return mShaderResult[filename];
+	}
+	FShader shader;
+	mShaderResult.insert({filename,shader});
 
+#ifdef _WIN32
+	mShaderResult[filename].mvsByteCode = d3dUtil::CompileShader(filename, nullptr, "VS", "vs_5_1");
+	mShaderResult[filename].mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_1");
 #endif
+
+	return mShaderResult[filename];
 }
 
 ShaderManager* ShaderManager::GetShaderManager()

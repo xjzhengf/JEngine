@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
+#include "FRenderScene.h"
 #include "FTexture.h"
 #include "Buffer.h"
 class FDynamicRHI
@@ -20,28 +21,19 @@ public:
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) = 0;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) = 0;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) {};
-	virtual void ClearRenderTargetView(unsigned __int64 ptr) = 0;
-	virtual void ClearDepthStencilView(unsigned __int64 ptr) = 0;
-	virtual void OMSetStencilRef(int StencilRef) = 0;
-	virtual void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr) = 0;
-	virtual void SetDescriptorHeaps(std::string Name) = 0;
-	virtual void SetGraphicsRootSignature() = 0;
-	virtual void IASetVertexAndIndexBuffers(Buffer* buffer) = 0;
-	virtual void IASetPrimitiveTopology() = 0;
+
 	virtual void SetPipelineState(const std::string& Name) = 0;
-	virtual void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth) {};
-	virtual void SetGraphicsRoot32BitConstants() = 0;
-	virtual void DrawIndexedInstanced(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) = 0;
+
 	virtual void ExecuteCommandLists() = 0;
 	virtual void DrawPrepare() = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
-	virtual void Draw(const GameTimer& gt) = 0;
-	virtual void UpdateCB(const GameTimer& gt, std::shared_ptr<FRenderResource> renderResource, const std::string& Name, int CBIndex) = 0;
-	virtual void BuildRenderItem(std::shared_ptr<FRenderResource> renderResource, ActorStruct* actor, const std::string& Name) = 0;
-	virtual void BuildLight(std::shared_ptr<FRenderResource> renderResource) = 0;
+
+	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName,int RenderItemIndex)=0;
+	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand, bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) = 0;
+	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth) = 0;
 
 public:
-	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderResource> renderResource, const std::string& Name) = 0;
+	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderScene> renderResource, const std::string& Name) = 0;
 	virtual void CreateShader( const std::wstring& filename)=0;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderResource> renderResource) {};
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource) {};
 };

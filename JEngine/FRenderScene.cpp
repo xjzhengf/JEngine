@@ -6,10 +6,6 @@ const int gNumFrameResources = 3;
 std::unordered_map<std::string, MeshData> FRenderScene::meshDataVector;
 std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 {
-	if (!mRenderUpdate)
-	{
-		return meshDataVector;
-	}
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		StaticMeshInfo* myStruct = AssetManager::GetAssetManager()->FindAssetByActor(*Actor.second);
@@ -53,20 +49,7 @@ std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 		meshDataVector[Actor.first] = std::move(meshData);
 		//meshDataVector.push_back(std::move(meshData));
 	}
-	mRenderUpdate = false;
 	return meshDataVector;
-}
-
-void FRenderScene::BuildMaterial()
-{
-	auto grass = std::make_unique<FMaterial>();
-	grass->Name = "Grass";
-	grass->MatCBIndex = 0;
-	grass->DiffuseAlbedo = glm::vec4(0.2f,0.6f,0.2f,1.0f);
-	grass->FresnelR0 = glm::vec3(0.01f, 0.01f, 0.01f);
-	grass->Roughness = 0.125f;
-
-	mMaterials["Grass"] = std::move(grass);
 }
 
 

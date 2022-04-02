@@ -1,8 +1,12 @@
 #pragma once
 #include "stdafx.h"
+#include "FPSO.h"
 extern const int gNumFrameResources;
 class FMaterial {
 public:
+	FMaterial() {
+		mPso = std::make_unique<FPSO>();
+	}
 	// Unique material name for lookup.
 	std::string Name;
 	// Index into constant buffer corresponding to this material.
@@ -16,11 +20,8 @@ public:
 	// update to each FrameResource.  Thus, when we modify a material we should set 
 	// NumFramesDirty = gNumFrameResources so that each frame resource gets the update.
 	int NumFramesDirty = gNumFrameResources;
-	// Material constant buffer data used for shading.
-	glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glm::vec3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
-	float Roughness = .25f;
-	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
+	std::unique_ptr<FPSO> mPso = nullptr;
+	std::wstring GlobalShader;
 };
 
 struct FMaterialConstants

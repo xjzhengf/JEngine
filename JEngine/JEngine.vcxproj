@@ -156,6 +156,7 @@
     </ClCompile>
     <ClCompile Include="FDynamicRHI.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
+    <ClCompile Include="FPSO.cpp" />
     <ClCompile Include="FRenderResource.cpp" />
     <ClCompile Include="FRHIFactory.cpp" />
     <ClCompile Include="FRenderScene.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="HeapManager.cpp" />
     <ClCompile Include="LauncherPCWindow.cpp" />
+    <ClCompile Include="MaterialManager.cpp" />
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RHIResource.cpp" />
@@ -188,6 +190,7 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FDirectionalLightProperty.h" />
     <ClInclude Include="FirstPersonCamera.h" />
+    <ClInclude Include="FPSO.h" />
     <ClInclude Include="FRenderResource.h" />
     <ClInclude Include="FRHIFactory.h" />
     <ClInclude Include="FRenderScene.h" />
@@ -197,6 +200,7 @@
     <ClInclude Include="HeapManager.h" />
     <ClInclude Include="LauncherPCWindow.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="MaterialManager.h" />
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="MeshProperty.h" />
     <ClInclude Include="Render.h" />
