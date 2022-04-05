@@ -3,7 +3,7 @@
 #include "SceneManager.h"
 #include "AssetManager.h"
 #include "ShaderManager.h"
-
+#include "MaterialManager.h"
 #include "Engine.h"
 #include "DXRHIResource.h"
 #include "FRenderScene.h"
@@ -39,6 +39,8 @@ bool DX12RHI::Initialize()
 	}
 
 	OnResize();
+	BulidDescriptorHeaps();
+	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1000, true);
 	return true;
 }
 
@@ -199,12 +201,10 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 }
 
 
-void DX12RHI::DrawPrepare()
+void DX12RHI::DrawPrepare(std::shared_ptr<RenderItem> renderItem)
 {
-	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1000, true);
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-	BulidRootSignature();
-	BulidDescriptorHeaps();
+	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
+	BuildPSO(renderItem);
 }
 
 void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)
@@ -243,6 +243,12 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const
 
 void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex)
 {
+	if (renderResource->mRenderItem[ActorName] == nullptr) {
+		renderResource->mRenderItem[ActorName] = std::make_shared<RenderItem>();
+	}
+	if (renderResource->mRenderItem[ActorName]->mGeo == nullptr) {
+		renderResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
+	}
 	BuildRenderItem(renderResource, ActorName);
 	UpdateCB(renderResource, ActorName, RenderItemIndex);
 }
@@ -279,8 +285,6 @@ void DX12RHI::CreateShader(const std::wstring& filename)
 
 void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource)
 {
-	sceneResource->mRenderItem[ActorName] = std::make_unique<RenderItem>();
-	sceneResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
 	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
 	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
 	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource->mRenderItem[ActorName].get());
@@ -379,16 +383,18 @@ void DX12RHI::BulidRootSignature(FShader* shader)
 	ThrowIfFailed(md3dDevice->CreateRootSignature(0, shader->mvsByteCode->GetBufferPointer(), shader->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
 }
 
-
-
-void DX12RHI::BuildPSO(FRHIResource* RHIResource,const std::string& PSOType)
+void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 {
+	if (currentPSOName == renderItem->Mat.mPso.PSOName) {
+		return;
+	}
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
-	PSOState = dynamic_cast<DXRHIResource*>(RHIResource)->CreatePSO(PSOType);
-	PSOState.pRootSignature = mRootSigmature.Get();
-	PSOState.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	PSOState.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[PSOType])));
+	renderItem->Mat.mPso.dxPSO.pRootSignature = mRootSigmature.Get();
+	renderItem->Mat.mPso.dxPSO.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	renderItem->Mat.mPso.dxPSO.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	PSOState = renderItem->Mat.mPso.dxPSO;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[renderItem->Mat.mPso.PSOName])));
+	currentPSOName = renderItem->Mat.mPso.PSOName;
 }
 
 void DX12RHI::LoadTexture(FTexture* TextureResource)
@@ -417,6 +423,11 @@ void DX12RHI::ExecuteCommandLists()
 	FlushCommandQueue();
 }
 
+void DX12RHI::SetRenderItemMaterial(RenderItem* renderItem, const std::string& materialName)
+{
+	renderItem->Mat = MaterialManager::GetMaterialManager()->SearchMaterial(materialName);
+}
+
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)
 {
 
@@ -431,8 +442,15 @@ void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float 
 
 void DX12RHI::ResetCommand(const std::string& PSOName)
 {
-	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO[PSOName].Get()));
+	if (PSOName == "Null") {
+		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+	}
+	else
+	{
+		ThrowIfFailed(mDirectCmdListAlloc->Reset());
+		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO[PSOName].Get()));
+	}
+
 }
 
 void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)
@@ -538,9 +556,9 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
 }
 
-void DX12RHI::SetPipelineState(const std::string& Name)
+void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem)
 {
-	mCommandList->SetPipelineState(mPSO[Name].Get());
+	mCommandList->SetPipelineState(mPSO[renderItem->Mat.mPso.PSOName].Get());
 }
 
 void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)

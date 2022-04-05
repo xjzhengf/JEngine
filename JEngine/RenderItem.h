@@ -5,14 +5,16 @@
 class RenderItem
 {
 public:
-
+	RenderItem() {
+		
+	};
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
 	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
 
 	int NumFramesDirty = gNumFrameResources;
 	UINT ObjCBIndex = -1;
 	UINT ObjSrvIndex = -1;
-	FMaterial* Mat = nullptr;
+	FMaterial Mat;
 	
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
 	// Primitive topology.

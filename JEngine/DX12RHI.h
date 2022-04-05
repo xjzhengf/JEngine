@@ -58,7 +58,7 @@ private:
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem);
 	void BulidRootSignature(FShader* shader);
-	void BuildPSO(FRHIResource* RHIResource,const std::string& PSOName) override;
+	void BuildPSO(std::shared_ptr<RenderItem> renderItem) override;
 
 public:
 	void IASetVertexAndIndexBuffers(Buffer* buffer);
@@ -80,11 +80,11 @@ public:
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
-	virtual void SetPipelineState(const std::string& Name) override;
+	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-
-	virtual void DrawPrepare() override;
+	virtual void SetRenderItemMaterial(RenderItem* renderItem, const std::string& materialName)override;
+	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
 
 
 	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex) override;
@@ -110,6 +110,7 @@ protected:
 	SIZE_T indexOffset =0 ;
 	glm::vec3 cameraLoc;
 private:
+	std::string currentPSOName;
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;

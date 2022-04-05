@@ -16,16 +16,16 @@ public:
 	bool IsRunDrawPrepare = true;
 public:
 	virtual bool Initialize() = 0;
-	virtual void BuildPSO(FRHIResource* RHIResource, const std::string& PSOName) = 0;
+	virtual void BuildPSO(std::shared_ptr<RenderItem> renderItem) = 0;
 	virtual void ResetCommand(const std::string& PSOName) = 0;
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) = 0;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) = 0;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) {};
 
-	virtual void SetPipelineState(const std::string& Name) = 0;
-
+	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) = 0;
+	virtual void SetRenderItemMaterial(RenderItem* renderItem,const std::string& materialName) = 0;
 	virtual void ExecuteCommandLists() = 0;
-	virtual void DrawPrepare() = 0;
+	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem) = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;
 
 	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName,int RenderItemIndex)=0;

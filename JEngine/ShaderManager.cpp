@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "ShaderManager.h"
 ShaderManager* ShaderManager::mShaderManager = nullptr;
-const FShader& ShaderManager::CompileShader(const std::wstring& filename)
+FShader* ShaderManager::CompileShader(const std::wstring& filename)
 {
-	if (!mShaderResult.empty())
+	if (mShaderResult.find(filename)!= mShaderResult.end())
 	{
-		return mShaderResult[filename];
+		return &mShaderResult[filename];
 	}
 	FShader shader;
 	mShaderResult.insert({filename,shader});
@@ -15,7 +15,7 @@ const FShader& ShaderManager::CompileShader(const std::wstring& filename)
 	mShaderResult[filename].mpsByteCode = d3dUtil::CompileShader(filename, nullptr, "PS", "ps_5_1");
 #endif
 
-	return mShaderResult[filename];
+	return &mShaderResult[filename];
 }
 
 ShaderManager* ShaderManager::GetShaderManager()

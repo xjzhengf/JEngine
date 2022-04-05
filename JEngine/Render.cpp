@@ -26,17 +26,30 @@ void FRender::Render()
 
 void FRender::RenderInit()
 {
+	int CBIndex = 0;
+
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
 		mRHI->LoadTexture(texture.get());
 	}
+	mRHI->ResetCommand("Null");
+	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
+	{
+		mRHI->RenderFrameBegin(mRenderResource, Actor.first, CBIndex);
+		CBIndex++;
+	}
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
-	mRHI->BuildPSO(mRHIResource.get(), "Scene");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
-	mRHI->BuildPSO(mRHIResource.get(), "ShadowMap");
-	mRHI->DrawPrepare();
+
+
+	for (auto&& RenderItem : mRenderResource->mRenderItem)
+	{
+		mRHI->SetRenderItemMaterial(RenderItem.second.get(), "ShadowMap");
+		mRHI->DrawPrepare(RenderItem.second);
+	}
+
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())
 	{
-		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(),mRenderResource);
+		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(), mRenderResource);
 	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
@@ -44,7 +57,7 @@ void FRender::RenderInit()
 
 void FRender::SceneRender()
 {
-	mRHI->ResetCommand("Scene"); 
+	mRHI->ResetCommand("Scene");
 	BuildLight(mRenderResource);
 	BuildRenderItemTrans(mRenderResource);
 	int CBIndex = 0;
@@ -59,14 +72,21 @@ void FRender::SceneRender()
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	//DrawShadow
 	DepthRender();
+	for (auto&& RenderItem : mRenderResource->mRenderItem)
+	{
+		mRHI->SetRenderItemMaterial(RenderItem.second.get(), "Scene");
+		mRHI->DrawPrepare(RenderItem.second);
+	}
+
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
+
 	//ClearAndSetRenderTatget
 	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
 		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
 	//DrawMesh
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->SetPipelineState("Scene");
+		mRHI->SetPipelineState(RenderItem.second);
 		mRHI->DrawMesh(mRenderResource, RenderItem.first,false);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
@@ -82,7 +102,7 @@ void FRender::DepthRender()
 		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->SetPipelineState("ShadowMap");
+		mRHI->SetPipelineState(RenderItem.second);
 		mRHI->DrawMesh(mRenderResource, RenderItem.first,true);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);

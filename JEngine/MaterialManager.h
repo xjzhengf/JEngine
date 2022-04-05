@@ -13,10 +13,11 @@ private:
 
 	std::map<std::string, FMaterial> mMaterialMap;
 #pragma endregion
+public:
 #pragma region ËÑË÷Material½á¹û
 	const FMaterial& SearchMaterial(const std::string& MaterialName);
 #pragma endregion
-
+public:
 	MaterialManager();
 	~MaterialManager();
 	MaterialManager(const MaterialManager& sm) = delete;
@@ -24,4 +25,6 @@ private:
 
 protected:
 	static MaterialManager* mMaterialManager;
+	FMaterial material;
+	std::unique_ptr<FPSO> pso = std::make_unique<FPSO>();
 };

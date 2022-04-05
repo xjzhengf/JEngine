@@ -1,7 +1,10 @@
 #include "stdafx.h"
 #include "FPSO.h"
 #include "ShaderManager.h"
-PipelineState FPSO::CreateFPSO(const std::string& PSOType, std::vector<INPUT_ELEMENT_DESC> mInputLayout,FShader* shader)
+FPSO::FPSO()
+{
+}
+const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<INPUT_ELEMENT_DESC> mInputLayout,FShader* shader)
 {
 	if (mPsoMap.find(PSOType)!=mPsoMap.end()) {
 		return mPsoMap[PSOType];
@@ -17,27 +20,19 @@ PipelineState FPSO::CreateFPSO(const std::string& PSOType, std::vector<INPUT_ELE
 
 PipelineState FPSO::BuildRenderFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader)
 {
-	PipelineState mPso;
+
 #ifdef _WIN32
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;  
-	std::vector<D3D12_INPUT_ELEMENT_DESC> dxInputLayout;
-	mInputLayout =
-	{
-		{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, FORMAT_R32G32B32A32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, FORMAT_R32G32B32_FLOAT, 0, 28, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 40, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
 	dxInputLayout.resize(mInputLayout.size());
 	for (int i =0 ; i<mInputLayout.size();i++)
 	{
-		dxInputLayout[i].AlignedByteOffset =std::move(mInputLayout[i].AlignedByteOffset);
-		dxInputLayout[i].Format = std::move(DXGI_FORMAT(mInputLayout[i].Format));
-		dxInputLayout[i].InputSlot = std::move(mInputLayout[i].InputSlot);
-		dxInputLayout[i].InputSlotClass = std::move(D3D12_INPUT_CLASSIFICATION(mInputLayout[i].InputSlotClass));
-		dxInputLayout[i].InstanceDataStepRate = std::move(mInputLayout[i].InstanceDataStepRate);
-		dxInputLayout[i].SemanticIndex = std::move(mInputLayout[i].SemanticIndex);
-		dxInputLayout[i].SemanticName = std::move(mInputLayout[i].SemanticName);
+		dxInputLayout[i].AlignedByteOffset =mInputLayout[i].AlignedByteOffset;
+		dxInputLayout[i].Format = DXGI_FORMAT(mInputLayout[i].Format);
+		dxInputLayout[i].InputSlot = mInputLayout[i].InputSlot;
+		dxInputLayout[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION(mInputLayout[i].InputSlotClass);
+		dxInputLayout[i].InstanceDataStepRate = mInputLayout[i].InstanceDataStepRate;
+		dxInputLayout[i].SemanticIndex = mInputLayout[i].SemanticIndex;
+		dxInputLayout[i].SemanticName = mInputLayout[i].SemanticName;
 	}
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
@@ -61,7 +56,8 @@ PipelineState FPSO::BuildRenderFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	mPso.dxPSO =std::move(psoDesc);
+	mPso.PSOName = "Scene";
+	mPso.dxPSO =psoDesc;
 	return mPso;
 #endif
 	return PipelineState();
@@ -69,14 +65,9 @@ PipelineState FPSO::BuildRenderFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout
 
 PipelineState FPSO::BuildDepthFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader)
 {
-	PipelineState mPso;
 #ifdef _WIN32	
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	std::vector<D3D12_INPUT_ELEMENT_DESC> dxInputLayout;
-	mInputLayout =
-	{
-		{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
+
 	dxInputLayout.resize(mInputLayout.size());
 	for (int i = 0; i < mInputLayout.size(); i++)
 	{
@@ -113,7 +104,8 @@ PipelineState FPSO::BuildDepthFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout,
 	psoDesc.NumRenderTargets = 0;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-	mPso.dxPSO = std::move(psoDesc);
+	mPso.dxPSO = psoDesc;
+	mPso.PSOName = "ShadowMap";
 	return mPso;
 #endif
 	return PipelineState();

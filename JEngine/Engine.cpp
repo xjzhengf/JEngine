@@ -32,6 +32,7 @@ void Engine::Init(HINSTANCE hInstance)
 	mAssetManager = std::make_shared<AssetManager>();
 	mSceneManager = std::make_shared<SceneManager>();
 	mShaderManager = std::make_unique<ShaderManager>();
+	mMaterialManager = std::make_unique<MaterialManager>();
 
 	//³õÊ¼»¯Render
 	mRender->Init();

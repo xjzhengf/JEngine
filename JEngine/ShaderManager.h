@@ -19,7 +19,7 @@ public:
 #pragma endregion
 #pragma region ±àÒëshader  ËÑË÷shader½á¹û
 public:
-	const FShader& CompileShader(const std::wstring& filename);
+	 FShader* CompileShader(const std::wstring& filename);
 #pragma endregion
 
 	ShaderManager();
