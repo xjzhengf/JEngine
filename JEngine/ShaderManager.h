@@ -7,8 +7,10 @@
 
 class FShader {
 public:
+#ifdef _WIN32
 	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
+#endif
 };
 class ShaderManager {
 public:

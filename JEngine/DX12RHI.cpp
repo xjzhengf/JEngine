@@ -197,13 +197,11 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		objConstants.directionalLight.Location = SceneManager::GetSceneManager()->DirectionalLight.Location;
 		objConstants.LightViewProj = sceneResource->LightViewProj;
 		mObjectCB->CopyData(CBIndex, objConstants);
-	
 }
 
 
 void DX12RHI::DrawPrepare(std::shared_ptr<RenderItem> renderItem)
 {
-	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
 	BuildPSO(renderItem);
 }
 
@@ -263,7 +261,9 @@ void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::
 
 void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand, bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand)
 {
-	ClearRenderTargetView(ClearRenderTargetHand);
+	if (ClearRenderTargetHand != 0) {
+		ClearRenderTargetView(ClearRenderTargetHand);
+	}
 	ClearDepthStencilView(ClearDepthStencilHand);
 	OMSetRenderTargets(numTatgetDescriptors, SetRenderTargetHand, RTsSingleHandleToDescriptorRange, SetDepthStencilHand);
 	SetDescriptorHeaps();
@@ -385,9 +385,11 @@ void DX12RHI::BulidRootSignature(FShader* shader)
 
 void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 {
+
 	if (currentPSOName == renderItem->Mat.mPso.PSOName) {
 		return;
 	}
+	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
 	renderItem->Mat.mPso.dxPSO.pRootSignature = mRootSigmature.Get();
 	renderItem->Mat.mPso.dxPSO.SampleDesc.Count = m4xMsaaState ? 4 : 1;
@@ -423,14 +425,13 @@ void DX12RHI::ExecuteCommandLists()
 	FlushCommandQueue();
 }
 
-void DX12RHI::SetRenderItemMaterial(RenderItem* renderItem, const std::string& materialName)
+void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& materialName)
 {
 	renderItem->Mat = MaterialManager::GetMaterialManager()->SearchMaterial(materialName);
 }
 
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)
 {
-
 	mScreenViewport.Height = Height;
 	mScreenViewport.MaxDepth = MaxDepth;
 	mScreenViewport.MinDepth = MinDepth;
@@ -558,6 +559,7 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 
 void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem)
 {
+	BuildPSO(renderItem);
 	mCommandList->SetPipelineState(mPSO[renderItem->Mat.mPso.PSOName].Get());
 }
 

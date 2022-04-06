@@ -23,7 +23,7 @@ public:
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) {};
 
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) = 0;
-	virtual void SetRenderItemMaterial(RenderItem* renderItem,const std::string& materialName) = 0;
+	virtual void ChangePSOState(RenderItem* renderItem,const std::string& materialName) = 0;
 	virtual void ExecuteCommandLists() = 0;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem) = 0;
 	virtual void LoadTexture(FTexture* TextureResource) = 0;

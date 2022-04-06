@@ -83,7 +83,7 @@ public:
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void SetRenderItemMaterial(RenderItem* renderItem, const std::string& materialName)override;
+	virtual void ChangePSOState(RenderItem* renderItem, const std::string& materialName)override;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
 
 
