@@ -427,7 +427,8 @@ void DX12RHI::ExecuteCommandLists()
 
 void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& PSOName)
 {
-	renderItem->Mat = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName);
+	renderItem->Mat.GlobalShader = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).GlobalShader;
+	renderItem->Mat.mPso = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).mPso;
 }
 
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)
