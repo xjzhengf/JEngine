@@ -10,7 +10,8 @@ public:
 	void Render();
 	void RenderInit();
 	void SceneRender();
-	void DepthRender();
+	void DepthPass();
+	void BasePass();
 	void BuildLight(std::shared_ptr<FRenderScene> sceneResource);
 	void BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource);
 	~FRender();
