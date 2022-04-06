@@ -386,7 +386,7 @@ void DX12RHI::BulidRootSignature(FShader* shader)
 void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 {
 
-	if (currentPSOName == renderItem->Mat.mPso.PSOName) {
+	if (PSONames.find(renderItem->Mat.mPso.PSOName) != PSONames.end()) {
 		return;
 	}
 	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
@@ -396,7 +396,7 @@ void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 	renderItem->Mat.mPso.dxPSO.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	PSOState = renderItem->Mat.mPso.dxPSO;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[renderItem->Mat.mPso.PSOName])));
-	currentPSOName = renderItem->Mat.mPso.PSOName;
+	PSONames.insert(renderItem->Mat.mPso.PSOName);
 }
 
 void DX12RHI::LoadTexture(FTexture* TextureResource)
@@ -425,9 +425,9 @@ void DX12RHI::ExecuteCommandLists()
 	FlushCommandQueue();
 }
 
-void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& materialName)
+void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& PSOName)
 {
-	renderItem->Mat = MaterialManager::GetMaterialManager()->SearchMaterial(materialName);
+	renderItem->Mat = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName);
 }
 
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)

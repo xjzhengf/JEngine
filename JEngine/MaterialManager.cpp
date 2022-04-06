@@ -16,8 +16,6 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		}
 	//}
 	if (MaterialName == "Scene") {
-
-
 		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
 		mInputLayout =
 		{

@@ -83,7 +83,7 @@ public:
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
 	virtual void LoadTexture(FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void ChangePSOState(RenderItem* renderItem, const std::string& materialName)override;
+	virtual void ChangePSOState(RenderItem* renderItem, const std::string& PSOName)override;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
 
 
@@ -110,7 +110,7 @@ protected:
 	SIZE_T indexOffset =0 ;
 	glm::vec3 cameraLoc;
 private:
-	std::string currentPSOName;
+	std::set<std::string> PSONames;
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;

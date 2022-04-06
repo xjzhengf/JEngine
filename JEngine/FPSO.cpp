@@ -71,13 +71,13 @@ PipelineState FPSO::BuildDepthFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout,
 	dxInputLayout.resize(mInputLayout.size());
 	for (int i = 0; i < mInputLayout.size(); i++)
 	{
-		dxInputLayout[i].AlignedByteOffset = std::move(mInputLayout[i].AlignedByteOffset);
-		dxInputLayout[i].Format = std::move(DXGI_FORMAT(mInputLayout[i].Format));
-		dxInputLayout[i].InputSlot = std::move(mInputLayout[i].InputSlot);
-		dxInputLayout[i].InputSlotClass = std::move(D3D12_INPUT_CLASSIFICATION(mInputLayout[i].InputSlotClass));
-		dxInputLayout[i].InstanceDataStepRate = std::move(mInputLayout[i].InstanceDataStepRate);
-		dxInputLayout[i].SemanticIndex = std::move(mInputLayout[i].SemanticIndex);
-		dxInputLayout[i].SemanticName = std::move(mInputLayout[i].SemanticName);
+		dxInputLayout[i].AlignedByteOffset = mInputLayout[i].AlignedByteOffset;
+		dxInputLayout[i].Format = DXGI_FORMAT(mInputLayout[i].Format);
+		dxInputLayout[i].InputSlot = mInputLayout[i].InputSlot;
+		dxInputLayout[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION(mInputLayout[i].InputSlotClass);
+		dxInputLayout[i].InstanceDataStepRate = mInputLayout[i].InstanceDataStepRate;
+		dxInputLayout[i].SemanticIndex = mInputLayout[i].SemanticIndex;
+		dxInputLayout[i].SemanticName = mInputLayout[i].SemanticName;
 	}
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 

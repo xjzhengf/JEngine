@@ -67,23 +67,22 @@ void FRender::SceneRender()
 		mRHI->RenderFrameBegin(mRenderResource, Actor.first, CBIndex);
 		CBIndex++;
 	}
-	DepthRender();
 	//SetViewportAndScissorRect
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	//DrawShadow
+	DepthRender();
+
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
 	//ClearAndSetRenderTatget
 	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
 		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
-
-
 	//DrawMesh
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
 		mRHI->ChangePSOState(RenderItem.second.get(), "Scene");
 		mRHI->SetPipelineState(RenderItem.second);
-		mRHI->DrawMesh(mRenderResource, RenderItem.first,false);
+		mRHI->DrawMesh(mRenderResource, RenderItem.first, false);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
 	//RenderFrameEnd
@@ -98,6 +97,7 @@ void FRender::DepthRender()
 		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
+		mRHI->ChangePSOState(RenderItem.second.get(), "ShadowMap");
 		mRHI->SetPipelineState(RenderItem.second);
 		mRHI->DrawMesh(mRenderResource, RenderItem.first, true);
 	}
