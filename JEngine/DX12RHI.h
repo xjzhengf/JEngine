@@ -56,7 +56,7 @@ private:
 	void BulidDescriptorHeaps();
 	void BulidConstantBuffers(const std::string& Name, RenderItem* renderItem);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
-	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem);
+	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, std::shared_ptr<FRenderScene> renderScene);
 	void BulidRootSignature(FShader* shader);
 	void BuildPSO(std::shared_ptr<RenderItem> renderItem) override;
 
@@ -81,7 +81,7 @@ public:
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
-	virtual void LoadTexture(FTexture* TextureResource) override;
+	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void ChangePSOState(RenderItem* renderItem, const std::string& PSOName)override;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
@@ -117,12 +117,9 @@ private:
 
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
 
-	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-
-
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	ComPtr<ID3D12RootSignature> mRootSigmature = nullptr;
+	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;

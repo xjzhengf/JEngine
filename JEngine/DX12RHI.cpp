@@ -287,7 +287,7 @@ void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Act
 {
 	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
 	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
-	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource->mRenderItem[ActorName].get());
+	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource);
 }
 
 
@@ -326,9 +326,9 @@ void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResou
 
 }
 
-void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, RenderItem* renderItem)
+void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, std::shared_ptr<FRenderScene> renderScene)
 {
-	renderItem->ObjSrvIndex = ++offsetIndex;
+	renderScene->mRenderItem[ActorName]->ObjSrvIndex = ++offsetIndex;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(offsetIndex, mCbvSrvUavDescriptorSize);
 	std::string ResourceName;
@@ -336,15 +336,15 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	std::string str(Name.c_str());
 	str.resize(str.size());
 	ComPtr<ID3D12Resource>  woodCrateNormal;
-	if (mTextures.find(str) == mTextures.end()) {
+	if (renderScene->mTextures.find(str) == renderScene->mTextures.end()) {
 		ResourceName = "Null";
-		woodCrateNormal = mTextures["Normal"]->Resource;
+		woodCrateNormal = renderScene->mTextures["Normal"]->Resource;
 	}
 	else {
 		ResourceName = str;
-		woodCrateNormal = mTextures[ResourceName]->Resource;
+		woodCrateNormal = renderScene->mTextures[ResourceName]->Resource;
 	}
-	auto woodCrateTex = mTextures[ResourceName]->Resource;
+	auto woodCrateTex = renderScene->mTextures[ResourceName]->Resource;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -380,7 +380,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 
 void DX12RHI::BulidRootSignature(FShader* shader)
 {
-	ThrowIfFailed(md3dDevice->CreateRootSignature(0, shader->mvsByteCode->GetBufferPointer(), shader->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSigmature)));
+	ThrowIfFailed(md3dDevice->CreateRootSignature(0, shader->mvsByteCode->GetBufferPointer(), shader->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
 }
 
 void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
@@ -391,7 +391,7 @@ void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 	}
 	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
-	renderItem->Mat.mPso.dxPSO.pRootSignature = mRootSigmature.Get();
+	renderItem->Mat.mPso.dxPSO.pRootSignature = mRootSignature.Get();
 	renderItem->Mat.mPso.dxPSO.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	renderItem->Mat.mPso.dxPSO.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	PSOState = renderItem->Mat.mPso.dxPSO;
@@ -399,7 +399,7 @@ void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 	PSONames.insert(renderItem->Mat.mPso.PSOName);
 }
 
-void DX12RHI::LoadTexture(FTexture* TextureResource)
+void DX12RHI::CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
@@ -409,7 +409,7 @@ void DX12RHI::LoadTexture(FTexture* TextureResource)
 	createNullTex->Name = texture->Name;
 	createNullTex->Filename =texture->FilePath;
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createNullTex->Filename.c_str(), createNullTex->Resource, createNullTex->UploadHeap));
-	mTextures[createNullTex->Name] = std::move(createNullTex);
+	renderResource->mTextures[createNullTex->Name] = std::move(createNullTex);
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
@@ -521,7 +521,7 @@ void DX12RHI::SetDescriptorHeaps()
 
 void DX12RHI::SetGraphicsRootSignature()
 {
-	mCommandList->SetGraphicsRootSignature(mRootSigmature.Get());
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 }
 
 void DX12RHI::IASetVertexAndIndexBuffers(Buffer* buffer)

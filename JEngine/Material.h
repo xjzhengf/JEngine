@@ -14,7 +14,8 @@ public:
 
 	int NumFramesDirty = gNumFrameResources;
 	PipelineState mPso ;
-	std::wstring GlobalShader;
+	std::wstring GlobalShader;	
+	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 	void operator=(const FMaterial& m) {
 		mPso = m.mPso;
 		GlobalShader = m.GlobalShader;

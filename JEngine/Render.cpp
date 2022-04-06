@@ -29,7 +29,7 @@ void FRender::RenderInit()
 	int CBIndex = 0;
 
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
-		mRHI->LoadTexture(texture.get());
+		mRHI->CreateTextureResource(mRenderResource,texture.get());
 	}
 	mRHI->ResetCommand("Null");
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
