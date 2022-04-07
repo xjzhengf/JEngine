@@ -423,6 +423,7 @@ void DX12RHI::ExecuteCommandLists()
 	ThrowIfFailed(mSwapChain->Present(0, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 	FlushCommandQueue();
+	currentPSOName = "";
 }
 
 void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& PSOName)
@@ -561,7 +562,13 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem)
 {
 	BuildPSO(renderItem);
-	mCommandList->SetPipelineState(mPSO[renderItem->Mat.mPso.PSOName].Get());
+	if (renderItem->Mat.mPso.PSOName != currentPSOName) {
+		mCommandList->SetPipelineState(mPSO[renderItem->Mat.mPso.PSOName].Get());
+	}
+	else {
+		return;
+	}
+	currentPSOName = renderItem->Mat.mPso.PSOName;
 }
 
 void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)

@@ -111,6 +111,7 @@ protected:
 	glm::vec3 cameraLoc;
 private:
 	std::set<std::string> PSONames;
+	std::string currentPSOName;
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
 	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;

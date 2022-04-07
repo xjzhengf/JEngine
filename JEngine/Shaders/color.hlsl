@@ -156,17 +156,23 @@ float ShadowCalculation(float4 shadowPosH) {
 float4 PS(VertexOut pin) : SV_Target
 {
 
-	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC)* gNormalMap.Sample(gsamPointWrap, pin.TexC);
+	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC) ;
+	float4 normal = gNormalMap.Sample(gsamPointWrap, pin.TexC);
 
 #ifdef ALPHA_TEST
 	clip(diffuseAlbedo.a - 0.1f);
 #endif
-	//float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f) * diffuseAlbedo;
+	float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f);
+	float4 lightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	float4 normalLight = dot(normal, light.Direction)*0.5+0.5;
+	float4 eye = float4 (normalize(CameraLoc - pin.PosH),1.0f);
+	float4 highlight = lightColor * pow(dot((eye + light.Direction), normal), 256);
+	float4 Color = diffuseAlbedo * (ambient + light.Brightness * normalLight);
 	//float shadowFactor = ShadowCalculation(pin.ShadowPosH);
 	//if (shadowFactor == 0) {
 	//	diffuseAlbedo = ambient;
 	//}
-	return diffuseAlbedo * (shadowFactor + 0.1);
+	return Color * (shadowFactor + 0.1);
 }
 
