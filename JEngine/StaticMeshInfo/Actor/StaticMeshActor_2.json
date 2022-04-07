@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "StaticMeshActor_2",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 1
+			},
+			"translation":
+			{
+				"x": -320,
+				"y": -1205,
+				"z": 225
+			},
+			"scale3D":
+			{
+				"x": 1,
+				"y": 7.5,
+				"z": 4.75
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"Cube"
+	]
+}
