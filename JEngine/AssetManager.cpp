@@ -68,6 +68,11 @@ void AssetManager::ReadBinaryFileToStaticMeshStruct(const char* TextPath)
 		inFile.read((char*)&uvLen, sizeof(int32_t));
 		meshAsset->UV.resize(uvLen);
 		inFile.read((char*)meshAsset->UV.data(), uvLen * sizeof(glm::vec2));
+
+		int TangentXLen = 0;
+		inFile.read((char*)&TangentXLen ,sizeof(int32_t));
+		meshAsset->TangentX.resize(TangentXLen);
+		inFile.read((char*)meshAsset->TangentX.data(), TangentXLen * sizeof(glm::vec4));
 	}
 	inFile.close();
 	this->MeshAsset.insert({ meshAsset->StaticMeshName,meshAsset });
@@ -101,16 +106,25 @@ void AssetManager::LoadTexture()
 	createTex2->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\em012_BM_01.dds";
 	mTextures.push_back(std::move(createTex2));
 
+	auto createTex3 = std::make_unique<FTexture>();
+	createTex3->Name = "SM_MatPreviewMesh_02";
+	createTex3->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\T_Metal_Gold_D.dds";
+	mTextures.push_back(std::move(createTex3));
+
 	auto createNullTex = std::make_unique<FTexture>();
 	createNullTex->Name = "Null";
-	createNullTex->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\tile.dds";
+	createNullTex->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\checkboard.dds";
 	mTextures.push_back(std::move(createNullTex));
 
 
 	auto createNormal = std::make_unique<FTexture>();
-	createNormal->Name = "Normal";
+	createNormal->Name = "Null";
 	createNormal->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\tile_nmap.dds";
-	mTextures.push_back(std::move(createNormal));
+	mNormalTextures.push_back(std::move(createNormal));
+	auto createNormal2 = std::make_unique<FTexture>();
+	createNormal2->Name = "SM_MatPreviewMesh_02";
+	createNormal2->FilePath = L"..\\JEngine\\StaticMeshInfo\\UV\\T_Metal_Gold_N.dds";
+	mNormalTextures.push_back(std::move(createNormal2));
 }
 
 void AssetManager::SelectFile()
@@ -158,6 +172,12 @@ std::unordered_map<std::string, StaticMeshInfo*>& AssetManager::GetMeshAsset()
 std::vector<std::shared_ptr<FTexture>>& AssetManager::GetTextures()
 {
 	return mTextures;
+}
+
+std::vector<std::shared_ptr<FTexture>>& AssetManager::GetNormalTextures()
+{
+	return mNormalTextures;
+	// TODO: insert return statement here
 }
 
 

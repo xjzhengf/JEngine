@@ -29,7 +29,10 @@ void FRender::RenderInit()
 	int CBIndex = 0;
 
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
-		mRHI->CreateTextureResource(mRenderResource,texture.get());
+		mRHI->CreateTextureResource(mRenderResource,texture.get(),false);
+	}
+	for (auto&& normalTexture : AssetManager::GetAssetManager()->GetNormalTextures()) {
+		mRHI->CreateTextureResource(mRenderResource, normalTexture.get(),true);
 	}
 	mRHI->ResetCommand("Null");
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
@@ -116,7 +119,7 @@ void FRender::BuildLight(std::shared_ptr<FRenderScene> sceneResource)
 	float Time = Engine::GetEngine()->Time / 5;
 	lightPos.x = lightPos.x * glm::cos(Time) - lightPos.y * glm::sin(Time);
 	lightPos.y = lightPos.y * glm::cos(Time) + lightPos.x * glm::sin(Time);
-
+	
 	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
 
@@ -162,7 +165,7 @@ void FRender::BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource)
 		Translate = glm::translate(Translate, location);
 		glm::mat4x4 Scale = glm::identity<glm::mat4x4>();
 		Scale = glm::scale(Scale, actorScale);
-
+		
 		glm::mat4x4 W = Translate * Rotation * Scale;
 		sceneResource->mRenderItem[Actor.first]->World = glm::transpose(W * mWorld);
 	}

@@ -11,3 +11,5 @@
 ..\\JEngine\\StaticMeshInfo\\Actor\\StaticMeshActor_3.dat
 ..\\JEngine\\StaticMeshInfo\\Actor\\Wall7_4.dat
 ..\\JEngine\\StaticMeshInfo\\Actor\\Wall9.dat
+..\\JEngine\\StaticMeshInfo\\Actor\\StaticMeshActor_5.dat
+..\\JEngine\\StaticMeshInfo\\Actor\\StaticMeshActor_7.dat

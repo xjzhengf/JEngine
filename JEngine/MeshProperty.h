@@ -38,6 +38,7 @@ struct StaticMeshInfo
 	std::vector<uint32_t> Indices;
 	std::vector<FColor> ColorVertices;
 	std::vector<glm::vec2> UV;
+	std::vector<glm::vec4> TangentX;
 };
 
 struct ActorStruct {
@@ -51,6 +52,7 @@ struct Vertex
 	glm::vec4 Color;
 	glm::vec3 Normal;
 	glm::vec2 TexC;
+	glm::vec4 TangentU;
 };
 
 struct MeshData

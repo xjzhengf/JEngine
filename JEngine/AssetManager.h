@@ -18,12 +18,14 @@ public:
 	void SelectFile();
 	std::unordered_map<std::string, StaticMeshInfo*>& GetMeshAsset();
 	std::vector<std::shared_ptr<FTexture>>& GetTextures();
+	std::vector<std::shared_ptr<FTexture>>& GetNormalTextures();
 	std::set<std::string> AssetVector;
 protected:
 	static AssetManager* mAssetManager;
 private:
 	std::unordered_map<std::string, StaticMeshInfo*> MeshAsset;
 	std::vector<std::shared_ptr<FTexture>> mTextures;
+	std::vector<std::shared_ptr<FTexture>> mNormalTextures;
 };
 
 

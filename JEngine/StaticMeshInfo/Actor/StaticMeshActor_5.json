@@ -1,0 +1,29 @@
+﻿{
+	"actorName": "StaticMeshActor_5",
+	"actorTransform": [
+		{
+			"rotation":
+			{
+				"x": 0,
+				"y": -0,
+				"z": 0.9762953519821167,
+				"w": 0.21644216775894165
+			},
+			"translation":
+			{
+				"x": -380,
+				"y": -45,
+				"z": 130
+			},
+			"scale3D":
+			{
+				"x": 1.5,
+				"y": 1.5,
+				"z": 1.5
+			}
+		}
+	],
+	"staticMeshAssetName": [
+		"SM_MatPreviewMesh_02"
+	]
+}

@@ -5,9 +5,9 @@
 //***************************************************************************************
 #define Sample_RootSig \
 "RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
-"DescriptorTable(CBV(b0,numDescriptors = 1), visibility = SHADER_VISIBILITY_ALL),"\
+"DescriptorTable(CBV(b0,numDescriptors = 2), visibility = SHADER_VISIBILITY_ALL),"\
 "DescriptorTable(SRV(t0,numDescriptors = 3), visibility = SHADER_VISIBILITY_PIXEL),"\
-"RootConstants(b1, num32BitConstants = 3),"\
+"RootConstants(b2, num32BitConstants = 3),"\
 "StaticSampler(s0," \
                 "addressU = TEXTURE_ADDRESS_WRAP," \
                 "addressV = TEXTURE_ADDRESS_WRAP," \
@@ -21,14 +21,20 @@
                 "mipLODBias =0 ,"\
                 "maxAnisotropy = 16,"\
                 "comparisonFunc = COMPARISON_LESS_EQUAL,"\
-                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK)"
+                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK),"\
+"StaticSampler(s2," \
+"addressU = TEXTURE_ADDRESS_WRAP," \
+"addressV = TEXTURE_ADDRESS_WRAP," \
+"addressW = TEXTURE_ADDRESS_WRAP," \
+"filter = FILTER_MIN_MAG_MIP_LINEAR)"
+
 
 Texture2D    gDiffuseMap : register(t0);
 Texture2D    gNormalMap : register(t1);
 Texture2D    gShadowMap : register(t2);
 SamplerState gsamPointWrap        : register(s0);
 SamplerComparisonState gSamShadow       : register(s1);
-//SamplerState gSamLinearWarp       : register(s2);
+SamplerState gSamLinearWrap       : register(s2);
 //SamplerState gsamLinearClamp      : register(s3);
 //SamplerState gsamAnisotropicWrap  : register(s4);
 //SamplerState gsamAnisotropicClamp : register(s5);
@@ -43,7 +49,14 @@ cbuffer cbPerObject : register(b0)
 	float4x4 TexTransform;
 	float Time;
 };
-float3 CameraLoc : register(b1);
+cbuffer materialConstants : register(b1)
+{
+	float4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
+	float Roughness = 0.25f;
+	float4x4 MatTransform ;
+};
+float3 CameraLoc : register(b2);
 
 struct VertexIn
 {
@@ -68,6 +81,7 @@ VertexOut VS(VertexIn vin)
 
 void PS(VertexOut pin) 
 {
+	float4 test = DiffuseAlbedo;
 }
 
 

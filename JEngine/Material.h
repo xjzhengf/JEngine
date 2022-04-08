@@ -2,6 +2,16 @@
 #include "stdafx.h"
 #include "FPSO.h"
 extern const int gNumFrameResources;
+
+struct FMaterialConstants
+{
+	glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glm::vec3 FresnelR0 = { 0.6f, 0.6f, 0.6f };
+	float Roughness = 0.3f;
+
+	// Used in texture mapping.
+	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
+};
 class FMaterial {
 public:
 	std::string Name;
@@ -20,14 +30,5 @@ public:
 		mPso = m.mPso;
 		GlobalShader = m.GlobalShader;
 	}
-};
-
-struct FMaterialConstants
-{
-	glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glm::vec3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
-	float Roughness = 0.25f;
-
-	// Used in texture mapping.
-	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
+	FMaterialConstants mMaterialConstants;
 };

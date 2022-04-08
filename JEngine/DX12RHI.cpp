@@ -41,6 +41,7 @@ bool DX12RHI::Initialize()
 	OnResize();
 	BulidDescriptorHeaps();
 	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1000, true);
+	mMaterialCB = std::make_unique<UploadBuffer<FMaterialConstants>>(md3dDevice.Get(), 1000, true);
 	return true;
 }
 
@@ -197,6 +198,10 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		objConstants.directionalLight.Location = SceneManager::GetSceneManager()->DirectionalLight.Location;
 		objConstants.LightViewProj = sceneResource->LightViewProj;
 		mObjectCB->CopyData(CBIndex, objConstants);
+		FMaterialConstants materialConstants;
+		materialConstants = sceneResource->mRenderItem[Name]->Mat.mMaterialConstants;
+		mMaterialCB->CopyData(CBIndex, materialConstants);
+
 }
 
 
@@ -316,6 +321,19 @@ void DX12RHI::BulidConstantBuffers(const std::string& Name,RenderItem* renderIte
 	cbvDesc.BufferLocation = cbAddress;
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 	md3dDevice->CreateConstantBufferView(&cbvDesc, hDescriptor);
+
+
+	UINT materialByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(FMaterialConstants));
+	D3D12_GPU_VIRTUAL_ADDRESS materialCbAddress = mMaterialCB->Resource()->GetGPUVirtualAddress();
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
+	hDescriptor2.Offset(++offsetIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	materialCbAddress += CBindex * materialByteSize;
+	renderItem->MaterialCBIndex = offsetIndex;
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc2;
+	cbvDesc2.BufferLocation = materialCbAddress;
+	cbvDesc2.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(FMaterialConstants));
+	md3dDevice->CreateConstantBufferView(&cbvDesc2, hDescriptor2);
 	CBindex++;
 }
 
@@ -336,16 +354,25 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	std::string str(Name.c_str());
 	str.resize(str.size());
 	ComPtr<ID3D12Resource>  woodCrateNormal;
-	if (renderScene->mTextures.find(str) == renderScene->mTextures.end()) {
+	ComPtr<ID3D12Resource>  woodCrateTex;
+	if (renderScene->mNormalTextures.find(str) == renderScene->mNormalTextures.end()) {
 		ResourceName = "Null";
-		woodCrateNormal = renderScene->mTextures["Normal"]->Resource;
+		woodCrateNormal = renderScene->mTextures[ResourceName]->Resource;
 	}
 	else {
 		ResourceName = str;
-		woodCrateNormal = renderScene->mTextures[ResourceName]->Resource;
-	}
-	auto woodCrateTex = renderScene->mTextures[ResourceName]->Resource;
+		woodCrateNormal = renderScene->mNormalTextures[ResourceName]->Resource;
 
+	}
+	if (renderScene->mTextures.find(str) == renderScene->mTextures.end()) {
+		ResourceName = "Null";
+		woodCrateTex = renderScene->mTextures[ResourceName]->Resource;
+	}
+	else
+	{
+		ResourceName = str;
+		woodCrateTex = renderScene->mTextures[ResourceName]->Resource;
+	}
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = woodCrateTex->GetDesc().Format;
@@ -399,7 +426,7 @@ void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
 	PSONames.insert(renderItem->Mat.mPso.PSOName);
 }
 
-void DX12RHI::CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource)
+void DX12RHI::CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource, bool isNormal)
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
@@ -409,7 +436,15 @@ void DX12RHI::CreateTextureResource(std::shared_ptr<FRenderScene> renderResource
 	createNullTex->Name = texture->Name;
 	createNullTex->Filename =texture->FilePath;
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(), mCommandList.Get(), createNullTex->Filename.c_str(), createNullTex->Resource, createNullTex->UploadHeap));
-	renderResource->mTextures[createNullTex->Name] = std::move(createNullTex);
+	if (isNormal)
+	{
+		renderResource->mNormalTextures[createNullTex->Name] = std::move(createNullTex);
+	}
+	else
+	{
+		renderResource->mTextures[createNullTex->Name] = std::move(createNullTex);
+	}
+
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
@@ -547,9 +582,9 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 	hDescriptor.Offset(renderItem->ObjCBIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	mCommandList->SetGraphicsRootDescriptorTable(0, hDescriptor);
 	if (!isDepth) {
-		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
-		hDescriptor2.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor2);
+		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor3(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
+		hDescriptor3.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor3);
 	}
 	SetGraphicsRoot32BitConstants();
 }

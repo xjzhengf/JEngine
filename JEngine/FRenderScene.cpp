@@ -21,6 +21,9 @@ std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 			meshData.vertices[i].Pos.z = myStruct->Vertices[i].z;
 			meshData.vertices[i].TexC.x = myStruct->UV[i].x;
 			meshData.vertices[i].TexC.y = myStruct->UV[i].y;
+			meshData.vertices[i].TangentU.x = myStruct->TangentX[i].x;
+			meshData.vertices[i].TangentU.y = myStruct->TangentX[i].y;
+			meshData.vertices[i].TangentU.z = myStruct->TangentX[i].z;
 
 		}
 

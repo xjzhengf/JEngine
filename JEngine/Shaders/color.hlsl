@@ -6,9 +6,9 @@
 
 #define Sample_RootSig \
 "RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
-"DescriptorTable(CBV(b0,numDescriptors = 1), visibility = SHADER_VISIBILITY_ALL),"\
+"DescriptorTable(CBV(b0,numDescriptors = 2), visibility = SHADER_VISIBILITY_ALL),"\
 "DescriptorTable(SRV(t0,numDescriptors = 3), visibility = SHADER_VISIBILITY_PIXEL),"\
-"RootConstants(b1, num32BitConstants = 3),"\
+"RootConstants(b2, num32BitConstants = 3),"\
 "StaticSampler(s0," \
                 "addressU = TEXTURE_ADDRESS_WRAP," \
                 "addressV = TEXTURE_ADDRESS_WRAP," \
@@ -22,14 +22,20 @@
                 "mipLODBias =0 ,"\
                 "maxAnisotropy = 16,"\
                 "comparisonFunc = COMPARISON_LESS_EQUAL,"\
-                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK)"
+                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK),"\
+"StaticSampler(s2," \
+"addressU = TEXTURE_ADDRESS_WRAP," \
+"addressV = TEXTURE_ADDRESS_WRAP," \
+"addressW = TEXTURE_ADDRESS_WRAP," \
+"filter = FILTER_MIN_MAG_MIP_LINEAR)"
+
 
 Texture2D    gDiffuseMap : register(t0);
 Texture2D    gNormalMap : register(t1);
 Texture2D    gShadowMap : register(t2);
 SamplerState gsamPointWrap        : register(s0);
 SamplerComparisonState gSamShadow       : register(s1);
-//SamplerState gSamLinearWarp       : register(s2);
+SamplerState gSamLinearWrap       : register(s2);
 //SamplerState gsamLinearClamp      : register(s3);
 //SamplerState gsamAnisotropicWrap  : register(s4);
 //SamplerState gsamAnisotropicClamp : register(s5);
@@ -38,6 +44,12 @@ struct Light {
 	float Brightness;
 	float3 Direction;
 	float4 Location;
+};
+struct Material {
+	float4 DiffuseAlbedo;
+	float3 FresnelR0;
+	float Roughness;
+	float Shininess;
 };
 
 cbuffer cbPerObject : register(b0)
@@ -50,7 +62,14 @@ cbuffer cbPerObject : register(b0)
 	float Time;
 	Light light;
 };
-float3 CameraLoc : register(b1);
+cbuffer materialConstants : register(b1)
+{
+	float4 DiffuseAlbedo ;
+	float3 FresnelR0;
+	float Roughness ;
+	float4x4 MatTransform ;
+};
+float3 CameraLoc : register(b2);
 
 struct VertexIn
 {
@@ -58,6 +77,7 @@ struct VertexIn
 	float4 Color : COLOR;
 	float3 Normal : NORMAL;
 	float2 TexC    : TEXCOORD;
+	float3 TangentU : TANGENT;
 };
 
 struct VertexOut
@@ -67,6 +87,7 @@ struct VertexOut
 	float4 Color : COLOR;
 	float3 Normal : NORMAL;
 	float2 TexC    : TEXCOORD;
+	float3 TangentW : TANGENT;
 };
 [RootSignature(Sample_RootSig)]
 VertexOut VS(VertexIn vin)
@@ -75,36 +96,17 @@ VertexOut VS(VertexIn vin)
 	float3 POSL = vin.PosL;
 	//POSL.z += sin(Time)*100;
 	float4 posW = mul(float4(POSL, 1.0f), gWorld);
-	
+
 	vout.PosH = mul(posW, gViewProj);
 	vout.ShadowPosH = mul(posW, tLightViewProj);
 	vout.Color = vin.Color;
-	vout.Normal = vin.Normal;
-
+	vout.Normal = mul(vin.Normal, (float3x3)gWorld);
+	vout.TangentW = mul(vin.TangentU, (float3x3)gWorld);
 	float4 texC = mul(float4(vin.TexC, 0.0f, 1.0f), TexTransform);
 	vout.TexC = texC.xy;
-	
-
-
 	return vout;
 }
 
-
-
-
-//float4 ComputeLighting(float3 shadowFactor,Light gLights,float3 toEye){
-//	float3 result = 0.0f;
-//    int i = 0;
-//
-//    for(i = 0; i < 3; ++i)
-//    {
-//        result += shadowFactor[i] * ComputeDirectionalLight(gLights, toEye);
-//    }
-//
-//}
-//float3 ComputeDirectionalLight(Light L, float3 normal, float3 toEye){
-//
-//}
 
 
 
@@ -152,20 +154,101 @@ float ShadowCalculation(float4 shadowPosH) {
 	return depth > depthInMap ? 0 : 1;
 
 }
+
+
+
+float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
+{
+	float cosIncidentAngle = saturate(dot(normal, lightVec));
+
+	float f0 = 1.0f - cosIncidentAngle;
+	float3 reflectPercent = R0 + (1.0f - R0) * (f0 * f0 * f0 * f0 * f0);
+
+	return reflectPercent;
+}
+
+float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 toEye, Material mat)
+{
+	const float m = mat.Shininess * 256.0f;
+	float3 halfVec = normalize(toEye + lightVec);
+
+	float roughnessFactor = (m + 8.0f) * pow(max(dot(halfVec, normal), 0.0f), m) / 8.0f;
+	float3 fresnelFactor = SchlickFresnel(mat.FresnelR0, halfVec, lightVec);
+
+	float3 specAlbedo = fresnelFactor * roughnessFactor;
+
+	// Our spec formula goes outside [0,1] range, but we are 
+	// doing LDR rendering.  So scale it down a bit.
+	specAlbedo = specAlbedo / (specAlbedo + 1.0f);
+
+	return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
+}
+float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEye)
+{
+	// The light vector aims opposite the direction the light rays travel.
+	float3 lightVec = -L.Direction;
+
+	// Scale light down by Lambert's cosine law.
+	float ndotl = max(dot(lightVec, normal), 0.0f);
+	float3 lightStrength = L.Brightness * ndotl;
+
+	return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
+}
+float3 NormalSampleToWorldSpace(float3 normalMapSample, float3 unitNormalW, float3 tangentW)
+{
+	// Uncompress each component from [0,1] to [-1,1].
+	float3 normalT = 2.0f * normalMapSample - 1.0f;
+
+	// Build orthonormal basis.
+	float3 N = unitNormalW;
+	float3 T = normalize(tangentW - dot(tangentW, N) * N);
+	float3 B = cross(N, T);
+
+	float3x3 TBN = float3x3(T, B, N);
+
+	// Transform from tangent space to world space.
+	float3 bumpedNormalW = mul(normalT, TBN);
+
+	return bumpedNormalW;
+}
 [RootSignature(Sample_RootSig)]
 float4 PS(VertexOut pin) : SV_Target
 {
 
-	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC) ;
-	float4 normal = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+//	float4 diffuseAlbedo = DiffuseAlbedo;
+//	float3 fresnelR0 = FresnelR0;
+//	float  roughness = Roughness;
+//	diffuseAlbedo *= gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
+//	float4 normalMap = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+//	float3 bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
+//
+//#ifdef ALPHA_TEST
+//	clip(diffuseAlbedo.a - 0.1f);
+//#endif
+//	float4 gAmbientLight = float4(0.25f, 0.25f, 0.35f, 1.0f);
+//	float4 ambient = gAmbientLight * diffuseAlbedo;
+//	float4 normalLight = dot(normalMap, light.Direction) * 0.5 + 0.5;
+//	float3 toEyeW = normalize(CameraLoc - pin.PosH);
+//
+//	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+//	const float shininess = (1.0f - roughness) * normalMap.a;
+//	Material mat = { diffuseAlbedo, fresnelR0, roughness ,shininess };
+//	float4 directLight = float4(shadowFactor * ComputeDirectionalLight(light, mat, bumpedNormalW, toEyeW), 0.0f);
+//
+//	float4 litColor = ambient + directLight;
+//
+//	return litColor;
 
+
+	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
+	float4 normal = gNormalMap.Sample(gsamPointWrap, pin.TexC);
 #ifdef ALPHA_TEST
 	clip(diffuseAlbedo.a - 0.1f);
 #endif
 	float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f);
 	float4 lightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-	float4 normalLight = dot(normal, light.Direction)*0.5+0.5;
+	float4 normalLight = dot(normal, light.Direction) * 0.5 + 0.5;
 	float4 eye = float4 (normalize(CameraLoc - pin.PosH),1.0f);
 	float4 highlight = lightColor * pow(dot((eye + light.Direction), normal), 256);
 	float4 Color = diffuseAlbedo * (ambient + light.Brightness * normalLight);

@@ -30,6 +30,7 @@ struct ObjectConstants {
 	FDirectionalLight directionalLight;
 };
 
+
 class DX12RHI  :public FDynamicRHI {
 public:
 	DX12RHI();
@@ -81,7 +82,7 @@ public:
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
-	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource) override;
+	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource,bool isNormal) override;
 	virtual void ExecuteCommandLists() override;
 	virtual void ChangePSOState(RenderItem* renderItem, const std::string& PSOName)override;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
@@ -114,7 +115,7 @@ private:
 	std::string currentPSOName;
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvHeaps;
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB ;
-	std::map<std::string,std::unique_ptr<UploadBuffer<FMaterial>>> mMaterialCB ;
+	std::unique_ptr<UploadBuffer<FMaterialConstants>> mMaterialCB ;
 
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
 

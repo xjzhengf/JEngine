@@ -13,6 +13,7 @@ public:
 
 	int NumFramesDirty = gNumFrameResources;
 	UINT ObjCBIndex = -1;
+	UINT MaterialCBIndex = -1;
 	UINT ObjSrvIndex = -1;
 	FMaterial Mat;
 	
