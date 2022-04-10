@@ -193,8 +193,15 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		objConstants.ViewProj = glm::transpose(proj * view);
 		objConstants.TLightViewProj = sceneResource->TLightViewProj;
 		objConstants.World = sceneResource->mRenderItem[Name]->World;
+		objConstants.Rotation = sceneResource->mRenderItem[Name]->Rotation;
 		objConstants.directionalLight.Brightness = SceneManager::GetSceneManager()->DirectionalLight.Brightness;
-		objConstants.directionalLight.Direction = SceneManager::GetSceneManager()->DirectionalLight.Direction;
+		objConstants.directionalLight.Direction = sceneResource->LightDirection;
+		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.x).c_str());
+		OutputDebugStringA("            ");
+		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.y).c_str());
+		OutputDebugStringA("            ");
+		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.z).c_str());
+		OutputDebugStringA("\n");
 		objConstants.directionalLight.Location = SceneManager::GetSceneManager()->DirectionalLight.Location;
 		objConstants.LightViewProj = sceneResource->LightViewProj;
 		mObjectCB->CopyData(CBIndex, objConstants);
@@ -217,6 +224,13 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const
 		return;
 	}
 	std::unordered_map<std::string, MeshData> meshData = sceneResource->BuildMeshData();
+	std::string glod = std::string("StaticMeshActor_5");
+	glod.resize(glod.size()+1);
+	if (Name == glod) {
+		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.DiffuseAlbedo= { 1.0f, 1.0f, 1.0f, 1.0f };
+		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.FresnelR0= { 0.5f, 0.5f, 0.5f };
+		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.Roughness= 0.01f;
+	}
 
 	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
@@ -358,6 +372,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	if (renderScene->mNormalTextures.find(str) == renderScene->mNormalTextures.end()) {
 		ResourceName = "Null";
 		woodCrateNormal = renderScene->mTextures[ResourceName]->Resource;
+		renderScene->mRenderItem[ActorName]->Mat.mMaterialConstants.HasNormal = 0;
 	}
 	else {
 		ResourceName = str;

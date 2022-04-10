@@ -5,10 +5,11 @@ extern const int gNumFrameResources;
 
 struct FMaterialConstants
 {
-	glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glm::vec3 FresnelR0 = { 0.6f, 0.6f, 0.6f };
-	float Roughness = 0.3f;
+	glm::vec4 DiffuseAlbedo = { 0.9f, 0.9f, 0.9f, 1.0f };
+	glm::vec3 FresnelR0 = { 0.1f, 0.1f, 0.1f };
+	float Roughness = 1.0f;
 
+	int HasNormal = 1;
 	// Used in texture mapping.
 	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
 };

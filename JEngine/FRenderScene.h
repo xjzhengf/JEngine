@@ -12,4 +12,5 @@ public:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mNormalTextures;
 	glm::mat4x4 LightViewProj;
 	glm::mat4x4 TLightViewProj;
+	glm::vec3 LightDirection;
 };

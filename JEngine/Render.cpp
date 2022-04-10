@@ -115,11 +115,14 @@ void FRender::BasePass()
 void FRender::BuildLight(std::shared_ptr<FRenderScene> sceneResource)
 {
 	float Radius = 2500;
+	glm::vec3 direction = SceneManager::GetSceneManager()->DirectionalLight.Direction;
 	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
-	float Time = Engine::GetEngine()->Time / 5;
+	float Time =Engine::GetEngine()->Time/3;
+	direction.x = direction.x * glm::cos(Time) - direction.y * glm::sin(Time);
+	direction.y = direction.y * glm::cos(Time) + direction.x * glm::sin(Time);
 	lightPos.x = lightPos.x * glm::cos(Time) - lightPos.y * glm::sin(Time);
 	lightPos.y = lightPos.y * glm::cos(Time) + lightPos.x * glm::sin(Time);
-	
+	sceneResource->LightDirection = direction;
 	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);
 
@@ -167,6 +170,7 @@ void FRender::BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource)
 		Scale = glm::scale(Scale, actorScale);
 		
 		glm::mat4x4 W = Translate * Rotation * Scale;
+		sceneResource->mRenderItem[Actor.first]->Rotation = Rotation;
 		sceneResource->mRenderItem[Actor.first]->World = glm::transpose(W * mWorld);
 	}
 }

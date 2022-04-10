@@ -9,6 +9,7 @@ public:
 		
 	};
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
+	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
 	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
 
 	int NumFramesDirty = gNumFrameResources;

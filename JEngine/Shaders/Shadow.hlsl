@@ -46,6 +46,7 @@ cbuffer cbPerObject : register(b0)
 	float4x4 gLightViewProj;
 	float4x4 gViewProj;
 	float4x4 gWorld;
+	float4x4 gRotation;
 	float4x4 TexTransform;
 	float Time;
 };

@@ -25,6 +25,7 @@ struct ObjectConstants {
 	glm::mat4x4 LightViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 ViewProj = glm::identity<glm::mat4x4>();
 	glm::mat4x4 World = glm::identity<glm::mat4x4>();
+	glm::mat4x4 Rotation = glm::identity<glm::mat4x4>();
 	glm::mat4x4 TexTransform = glm::identity<glm::mat4x4>();
 	float Time = 0.0f;
 	FDirectionalLight directionalLight;
