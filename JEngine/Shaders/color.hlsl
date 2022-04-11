@@ -234,13 +234,13 @@ float4 PS(VertexOut pin) : SV_Target
 	pin.Normal = normalize(pin.Normal);
 	float4 normalMap = gNormalMap.Sample(gsamPointWrap, pin.TexC);
 	float3 bumpedNormalW;
-	//if (HasNormal ) {
-	//	bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
-	//}
-	//else {
-	//
-	//}
-	bumpedNormalW = pin.Normal;
+	if (HasNormal ) {
+		bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
+	}
+	else {
+		bumpedNormalW = pin.Normal;
+	}
+
 
 
 	float4 gAmbientLight = diffuseAlbedo*0.1;

@@ -46,17 +46,18 @@ void FRender::RenderInit()
 
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), "ShadowMap");
+		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second);
 	}
 
-	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())
+	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
 		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(), mRenderResource);
 	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
-}
+} 
+
 
 void FRender::SceneRender()
 {
@@ -71,8 +72,6 @@ void FRender::SceneRender()
 		CBIndex++;
 	}
 	//SetViewportAndScissorRect
-	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
-	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	DepthPass();
 	BasePass();
 	//RenderFrameEnd
@@ -81,13 +80,15 @@ void FRender::SceneRender()
 
 void FRender::DepthPass()
 {
+	mRHI->RSSetViewports(0.0f, 0.0f, 2048, 2048, 0.0f, 1.0f);
+	mRHI->RSSetScissorRects(0, 0, 2048, 2048);
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(0, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV(),
 		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), "ShadowMap");
+		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second);
 		mRHI->DrawMesh(mRenderResource, RenderItem.first, true);
 	}
@@ -96,6 +97,9 @@ void FRender::DepthPass()
 
 void FRender::BasePass()
 {
+	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
+	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
+
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
 	//ClearAndSetRenderTatget
 	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
@@ -103,7 +107,7 @@ void FRender::BasePass()
 	//DrawMesh
 	for (auto&& RenderItem : mRenderResource->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), "Scene");
+		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("Scene").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Scene").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second);
 		mRHI->DrawMesh(mRenderResource, RenderItem.first, false);
 	}

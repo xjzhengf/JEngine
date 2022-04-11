@@ -85,7 +85,7 @@ public:
 	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
 	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource,bool isNormal) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void ChangePSOState(RenderItem* renderItem, const std::string& PSOName)override;
+	virtual void ChangePSOState(RenderItem* renderItem, const PipelineState& PSO, const std::wstring& Shader)override;
 	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
 
 

@@ -67,6 +67,9 @@ MaterialManager::~MaterialManager()
 	};
 	material.GlobalShader = L"..\\JEngine\\Shaders\\color.hlsl";
 	material.Name = "Default";
+	material.mMaterialConstants.DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+	material.mMaterialConstants.FresnelR0 = { 0.5f, 0.5f, 0.5f };
+	material.mMaterialConstants.Roughness = 0.01f;
 	material.mPso = pso->CreateFPSO("Scene", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\color.hlsl"));
 	mMaterialMap["Default"] = material;
 }

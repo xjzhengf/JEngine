@@ -184,25 +184,19 @@ void DX12RHI::SetClientHeight(int Height)
 void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name,int CBIndex)
 {
 	Time = Engine::GetEngine()->Time;
-	cameraLoc = SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f();
-	SceneManager::GetSceneManager()->GetCamera()->UpdateViewMat();
+	cameraLoc = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetCameraPos3f();
+	    Engine::GetEngine()->GetSceneManager()->GetCamera()->UpdateViewMat();
 		ObjectConstants objConstants;
 		objConstants.Time = Time;
-		glm::mat4x4 proj = SceneManager::GetSceneManager()->GetCamera()->GetProj4x4();
-		glm::mat4x4 view = SceneManager::GetSceneManager()->GetCamera()->GetView4x4();
+		glm::mat4x4 proj = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetProj4x4();
+		glm::mat4x4 view = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetView4x4();
 		objConstants.ViewProj = glm::transpose(proj * view);
 		objConstants.TLightViewProj = sceneResource->TLightViewProj;
 		objConstants.World = sceneResource->mRenderItem[Name]->World;
 		objConstants.Rotation = sceneResource->mRenderItem[Name]->Rotation;
-		objConstants.directionalLight.Brightness = SceneManager::GetSceneManager()->DirectionalLight.Brightness;
+		objConstants.directionalLight.Brightness = Engine::GetEngine()->GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction = sceneResource->LightDirection;
-		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.x).c_str());
-		OutputDebugStringA("            ");
-		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.y).c_str());
-		OutputDebugStringA("            ");
-		OutputDebugStringA(std::to_string(objConstants.directionalLight.Direction.z).c_str());
-		OutputDebugStringA("\n");
-		objConstants.directionalLight.Location = SceneManager::GetSceneManager()->DirectionalLight.Location;
+		objConstants.directionalLight.Location = Engine::GetEngine()->GetSceneManager()->DirectionalLight.Location;
 		objConstants.LightViewProj = sceneResource->LightViewProj;
 		mObjectCB->CopyData(CBIndex, objConstants);
 		FMaterialConstants materialConstants;
@@ -304,7 +298,7 @@ void DX12RHI::CreateShader(const std::wstring& filename)
 
 void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource)
 {
-	StaticMeshInfo* MeshInfo = AssetManager::GetAssetManager()->FindAssetByActor(*Actor);
+	StaticMeshInfo* MeshInfo = Engine::GetEngine()->GetAssetManager()->FindAssetByActor(*Actor);
 	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
 	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource);
 }
@@ -476,10 +470,12 @@ void DX12RHI::ExecuteCommandLists()
 	currentPSOName = "";
 }
 
-void DX12RHI::ChangePSOState(RenderItem* renderItem, const std::string& PSOName)
+void DX12RHI::ChangePSOState(RenderItem* renderItem,const PipelineState& PSO, const std::wstring& Shader)
 {
-	renderItem->Mat.GlobalShader = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).GlobalShader;
-	renderItem->Mat.mPso = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).mPso;
+	//renderItem->Mat.GlobalShader = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).GlobalShader;
+	//renderItem->Mat.mPso = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).mPso;
+	renderItem->Mat.GlobalShader = Shader;
+	renderItem->Mat.mPso = PSO;
 }
 
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)

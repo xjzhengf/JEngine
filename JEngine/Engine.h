@@ -19,6 +19,7 @@ public:
 	static Engine* GetEngine();
 	std::shared_ptr<AssetManager> GetAssetManager();
 	std::shared_ptr<SceneManager> GetSceneManager();
+	std::unique_ptr<ShaderManager> GetShaderManager();
 	std::shared_ptr<WindowBase> GetWindow();
 	bool GetRuningState();
 	void SetRuningState(bool state);
