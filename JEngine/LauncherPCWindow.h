@@ -31,6 +31,6 @@ private:
 	   bool mResizing = false;         //调整大小是否被拖动
 	   bool mFullscreenState = false;  //开启全屏
 	   std::wstring mMainWndCaption = L"My Windows App";
-	   int mClientWidht = 1920;
-	   int mClientHeight = 1080;
+	   int mClientWidht = 1024;
+	   int mClientHeight = 768;
 };

@@ -60,7 +60,7 @@ private:
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
 	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, std::shared_ptr<FRenderScene> renderScene);
 	void BulidRootSignature(FShader* shader);
-	void BuildPSO(std::shared_ptr<RenderItem> renderItem) override;
+	void BuildPSO(std::shared_ptr<RenderItem> renderItem, FMaterial Mat) override;
 
 public:
 	void IASetVertexAndIndexBuffers(Buffer* buffer);
@@ -74,22 +74,22 @@ public:
 	void OMSetRenderTargets(int numTatgetDescriptors, unsigned __int64 RTptr, bool RTsSingleHandleToDescriptorRange, unsigned __int64 DSptr);
 	void SetDescriptorHeaps();
 	void SetGraphicsRootSignature();
-	void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, int CBIndex);
-	void BuildRenderItem(std::shared_ptr<FRenderScene> renderResource, const std::string& Name);
+
+	void BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, const std::string& MatName);
 public:
 	//override RHI
+	virtual void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, int CBIndex, FMaterial Mat) override;
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
 	virtual void ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore, int stateAfter) override;
-	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem) override;
-	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource,bool isNormal) override;
+	virtual void SetPipelineState(std::shared_ptr<RenderItem> renderItem, FMaterial Mat) override;
+	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource, bool isNormal) override;
 	virtual void ExecuteCommandLists() override;
-	virtual void ChangePSOState(RenderItem* renderItem, const PipelineState& PSO, const std::wstring& Shader)override;
-	virtual void DrawPrepare(std::shared_ptr<RenderItem> renderItem)override;
+	virtual void ChangePSOState(FMaterial Mat, const PipelineState& PSO, const std::wstring& Shader)override;
 
 
-	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex) override;
+	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName) override;
 	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth) override;
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
 		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;

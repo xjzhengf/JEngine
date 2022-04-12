@@ -10,7 +10,7 @@ bool FRender::Init()
 	RHIFactory = std::make_unique<FRHIFactory>();
 	mRHI = RHIFactory->CreateRHI();
 	mRHIResource = RHIFactory->CreateRHIResource();
-	mRenderResource = std::make_shared<FRenderScene>();
+	mRenderScene = std::make_shared<FRenderScene>();
 	if (!mRHI->Initialize()) {
 		return false;
 	}
@@ -29,30 +29,32 @@ void FRender::RenderInit()
 	int CBIndex = 0;
 
 	for (auto&& texture : AssetManager::GetAssetManager()->GetTextures()) {
-		mRHI->CreateTextureResource(mRenderResource,texture.get(),false);
+		mRHI->CreateTextureResource(mRenderScene, texture.get(), false);
 	}
 	for (auto&& normalTexture : AssetManager::GetAssetManager()->GetNormalTextures()) {
-		mRHI->CreateTextureResource(mRenderResource, normalTexture.get(),true);
+		mRHI->CreateTextureResource(mRenderScene, normalTexture.get(), true);
 	}
+
 	mRHI->ResetCommand("Null");
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
-		mRHI->RenderFrameBegin(mRenderResource, Actor.first, CBIndex);
+		mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
 		CBIndex++;
 	}
+
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
 
 
-	for (auto&& RenderItem : mRenderResource->mRenderItem)
+	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
-		mRHI->SetPipelineState(RenderItem.second);
+		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
+		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 	}
 
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
-		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(), mRenderResource);
+		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(), mRenderScene);
 	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
@@ -62,13 +64,14 @@ void FRender::RenderInit()
 void FRender::SceneRender()
 {
 	mRHI->ResetCommand("Scene");
-	BuildLight(mRenderResource);
-	BuildRenderItemTrans(mRenderResource);
+	BuildLight(mRenderScene);
+	BuildRenderItemTrans(mRenderScene);
 	int CBIndex = 0;
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		//RenderFrameBegin
-		mRHI->RenderFrameBegin(mRenderResource, Actor.first, CBIndex);
+		mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
+		mRHI->UpdateCB(mRenderScene, Actor.first, CBIndex, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 		CBIndex++;
 	}
 	//SetViewportAndScissorRect
@@ -86,11 +89,11 @@ void FRender::DepthPass()
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(0, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV(),
 		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
-	for (auto&& RenderItem : mRenderResource->mRenderItem)
+	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
-		mRHI->SetPipelineState(RenderItem.second);
-		mRHI->DrawMesh(mRenderResource, RenderItem.first, true);
+		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
+		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, true);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
@@ -105,11 +108,11 @@ void FRender::BasePass()
 	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
 		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
 	//DrawMesh
-	for (auto&& RenderItem : mRenderResource->mRenderItem)
+	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
-		mRHI->ChangePSOState(RenderItem.second.get(), MaterialManager::GetMaterialManager()->SearchMaterial("Scene").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Scene").GlobalShader);
-		mRHI->SetPipelineState(RenderItem.second);
-		mRHI->DrawMesh(mRenderResource, RenderItem.first, false);
+		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Scene").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Scene").GlobalShader);
+		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Scene"));
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, false);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
 }
@@ -174,7 +177,8 @@ void FRender::BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource)
 		Scale = glm::scale(Scale, actorScale);
 		
 		glm::mat4x4 W = Translate * Rotation * Scale;
-		sceneResource->mRenderItem[Actor.first]->Rotation = Rotation;
+		sceneResource->mRenderItem[Actor.first]->Rotation = glm::transpose(Rotation);
+		sceneResource->mRenderItem[Actor.first]->Scale = glm::transpose(Scale);
 		sceneResource->mRenderItem[Actor.first]->World = glm::transpose(W * mWorld);
 	}
 }

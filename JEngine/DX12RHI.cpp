@@ -181,7 +181,7 @@ void DX12RHI::SetClientHeight(int Height)
 {
 	this->mClientHeight = Height;
 }
-void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name,int CBIndex)
+void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name,int CBIndex,FMaterial Mat)
 {
 	Time = Engine::GetEngine()->Time;
 	cameraLoc = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetCameraPos3f();
@@ -194,38 +194,36 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		objConstants.TLightViewProj = sceneResource->TLightViewProj;
 		objConstants.World = sceneResource->mRenderItem[Name]->World;
 		objConstants.Rotation = sceneResource->mRenderItem[Name]->Rotation;
+		//objConstants.TexTransform = glm::transpose(sceneResource->mRenderItem[Name]->MatTransform) * sceneResource->mRenderItem[Name]->Scale;
 		objConstants.directionalLight.Brightness = Engine::GetEngine()->GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction = sceneResource->LightDirection;
 		objConstants.directionalLight.Location = Engine::GetEngine()->GetSceneManager()->DirectionalLight.Location;
 		objConstants.LightViewProj = sceneResource->LightViewProj;
 		mObjectCB->CopyData(CBIndex, objConstants);
 		FMaterialConstants materialConstants;
-		materialConstants = sceneResource->mRenderItem[Name]->Mat.mMaterialConstants;
+		materialConstants = Mat.mMaterialConstants;
+		//materialConstants.MatTransform = glm::transpose(sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.MatTransform);
 		mMaterialCB->CopyData(CBIndex, materialConstants);
 
 }
 
 
-void DX12RHI::DrawPrepare(std::shared_ptr<RenderItem> renderItem)
-{
-	BuildPSO(renderItem);
-}
 
-void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)
+void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, const std::string& MatName)
 {
 
 	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
 		return;
 	}
 	std::unordered_map<std::string, MeshData> meshData = sceneResource->BuildMeshData();
-	std::string glod = std::string("StaticMeshActor_5");
-	glod.resize(glod.size()+1);
-	if (Name == glod) {
-		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.DiffuseAlbedo= { 1.0f, 1.0f, 1.0f, 1.0f };
-		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.FresnelR0= { 0.5f, 0.5f, 0.5f };
-		sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.Roughness= 0.01f;
-	}
-
+	//std::string glod = std::string("StaticMeshActor_5");
+	/*glod.resize(glod.size()+1);*/
+	//if (Name == glod) {
+	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.DiffuseAlbedo= { 1.0f, 1.0f, 1.0f, 1.0f };
+	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.FresnelR0= { 0.5f, 0.5f, 0.5f };
+	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.Roughness= 0.01f;
+	//}
+	sceneResource->mRenderItem[Name]->MatName = MatName;
 	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
 	sceneResource->mRenderItem[Name]->mGeo->Name = Name;
@@ -252,7 +250,7 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const
 	sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name] = submesh;
 }
 
-void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex)
+void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName)
 {
 	if (renderResource->mRenderItem[ActorName] == nullptr) {
 		renderResource->mRenderItem[ActorName] = std::make_shared<RenderItem>();
@@ -260,8 +258,7 @@ void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, con
 	if (renderResource->mRenderItem[ActorName]->mGeo == nullptr) {
 		renderResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
 	}
-	BuildRenderItem(renderResource, ActorName);
-	UpdateCB(renderResource, ActorName, RenderItemIndex);
+	BuildRenderItem(renderResource, ActorName, MatName);
 }
 
 void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth)
@@ -366,7 +363,6 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 	if (renderScene->mNormalTextures.find(str) == renderScene->mNormalTextures.end()) {
 		ResourceName = "Null";
 		woodCrateNormal = renderScene->mTextures[ResourceName]->Resource;
-		renderScene->mRenderItem[ActorName]->Mat.mMaterialConstants.HasNormal = 0;
 	}
 	else {
 		ResourceName = str;
@@ -419,20 +415,20 @@ void DX12RHI::BulidRootSignature(FShader* shader)
 	ThrowIfFailed(md3dDevice->CreateRootSignature(0, shader->mvsByteCode->GetBufferPointer(), shader->mvsByteCode->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
 }
 
-void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem)
+void DX12RHI::BuildPSO(std::shared_ptr<RenderItem> renderItem,FMaterial Mat)
 {
 
-	if (PSONames.find(renderItem->Mat.mPso.PSOName) != PSONames.end()) {
+	if (PSONames.find(Mat.mPso.PSOName) != PSONames.end()) {
 		return;
 	}
-	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(renderItem->Mat.GlobalShader));
+	BulidRootSignature(ShaderManager::GetShaderManager()->CompileShader(Mat.GlobalShader));
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC PSOState;
-	renderItem->Mat.mPso.dxPSO.pRootSignature = mRootSignature.Get();
-	renderItem->Mat.mPso.dxPSO.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	renderItem->Mat.mPso.dxPSO.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	PSOState = renderItem->Mat.mPso.dxPSO;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[renderItem->Mat.mPso.PSOName])));
-	PSONames.insert(renderItem->Mat.mPso.PSOName);
+	Mat.mPso.dxPSO.pRootSignature = mRootSignature.Get();
+	Mat.mPso.dxPSO.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	Mat.mPso.dxPSO.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	PSOState = Mat.mPso.dxPSO;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSOState, IID_PPV_ARGS(&mPSO[Mat.mPso.PSOName])));
+	PSONames.insert(Mat.mPso.PSOName);
 }
 
 void DX12RHI::CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource, bool isNormal)
@@ -470,12 +466,12 @@ void DX12RHI::ExecuteCommandLists()
 	currentPSOName = "";
 }
 
-void DX12RHI::ChangePSOState(RenderItem* renderItem,const PipelineState& PSO, const std::wstring& Shader)
+void DX12RHI::ChangePSOState(FMaterial Mat,const PipelineState& PSO, const std::wstring& Shader)
 {
 	//renderItem->Mat.GlobalShader = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).GlobalShader;
 	//renderItem->Mat.mPso = MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).mPso;
-	renderItem->Mat.GlobalShader = Shader;
-	renderItem->Mat.mPso = PSO;
+	Mat.GlobalShader = Shader;
+	Mat.mPso = PSO;
 }
 
 void DX12RHI::RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth)
@@ -605,16 +601,16 @@ void DX12RHI::SetGraphicsRoot32BitConstants()
 	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
 }
 
-void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem)
+void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem,FMaterial Mat)
 {
-	BuildPSO(renderItem);
-	if (renderItem->Mat.mPso.PSOName != currentPSOName) {
-		mCommandList->SetPipelineState(mPSO[renderItem->Mat.mPso.PSOName].Get());
+	BuildPSO(renderItem, Mat);
+	if (Mat.mPso.PSOName != currentPSOName) {
+		mCommandList->SetPipelineState(mPSO[Mat.mPso.PSOName].Get());
 	}
 	else {
 		return;
 	}
-	currentPSOName = renderItem->Mat.mPso.PSOName;
+	currentPSOName = Mat.mPso.PSOName;
 }
 
 void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)

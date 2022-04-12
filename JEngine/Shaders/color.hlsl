@@ -67,7 +67,6 @@ cbuffer materialConstants : register(b1)
 	float4 DiffuseAlbedo ;
 	float3 FresnelR0;
 	float Roughness ;
-	int HasNormal;
 	float4x4 MatTransform ;
 };
 float3 CameraLoc : register(b2);
@@ -136,8 +135,6 @@ float ShadowCalculation(float4 shadowPosH) {
 	return depth > depthInMap ? 0 : 1;
 
 }
-
-
 
 float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
 {
@@ -234,7 +231,7 @@ float4 PS(VertexOut pin) : SV_Target
 	pin.Normal = normalize(pin.Normal);
 	float4 normalMap = gNormalMap.Sample(gsamPointWrap, pin.TexC);
 	float3 bumpedNormalW;
-	if (HasNormal ) {
+	if (normalMap.r == 0 && normalMap.g == 0 && normalMap.b == 0) {
 		bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
 	}
 	else {
@@ -253,6 +250,12 @@ float4 PS(VertexOut pin) : SV_Target
 		bumpedNormalW, toEyeW, shadowFactor);
 
 	float4 litColor = ambient + directLight;
+	//if (litColor.x < 1.0f && litColor.y < 1.0f && litColor.z < 1.0f) {
+	//	litColor  = float4(0.0f,0.0f,0.0f,1.0f);
+	//}
+	//else {
+	//	litColor = float4(1.0f,1.0f, 1.0f, 1.0f);
+	//}
 	return litColor;
 
 

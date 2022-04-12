@@ -18,7 +18,7 @@ public:
 private:
 	glm::mat4x4 mWorld = glm::identity<glm::mat4x4>();
 	std::shared_ptr<FDynamicRHI> mRHI = nullptr;
-	std::shared_ptr<FRenderScene> mRenderResource = nullptr;
+	std::shared_ptr<FRenderScene> mRenderScene = nullptr;
 	std::shared_ptr<FRHIResource> mRHIResource = nullptr;
 	std::shared_ptr<FRenderResource> mShadowResource = nullptr;
 	std::unique_ptr<FRHIFactory> RHIFactory = nullptr;
