@@ -219,62 +219,62 @@ VertexOut VS(VertexIn vin)
 float4 PS(VertexOut pin) : SV_Target
 {
 
-	float4 diffuseAlbedo = DiffuseAlbedo;
-	float3 fresnelR0 = FresnelR0;
-	float  roughness = Roughness;
-	diffuseAlbedo *= gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
-
-#ifdef ALPHA_TEST
-	clip(diffuseAlbedo.a - 0.1f);
-#endif
-	pin.TangentW = normalize(pin.TangentW);
-	pin.Normal = normalize(pin.Normal);
-	float4 normalMap = gNormalMap.Sample(gsamPointWrap, pin.TexC);
-	float3 bumpedNormalW;
-	if (normalMap.r == 0 && normalMap.g == 0 && normalMap.b == 0) {
-		bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
-	}
-	else {
-		bumpedNormalW = pin.Normal;
-	}
-
-
-
-	float4 gAmbientLight = diffuseAlbedo*0.1;
-	float4 ambient = gAmbientLight * diffuseAlbedo;
-	float3 toEyeW = normalize(CameraLoc - pin.PosH);
-	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-	const float shininess = (1.0f - roughness) * normalMap.a;
-	Material mat = { diffuseAlbedo, fresnelR0, roughness ,shininess };
-	float4 directLight = ComputeLighting(light, mat, pin.PosH,
-		bumpedNormalW, toEyeW, shadowFactor);
-
-	float4 litColor = ambient + directLight;
-	//if (litColor.x < 1.0f && litColor.y < 1.0f && litColor.z < 1.0f) {
-	//	litColor  = float4(0.0f,0.0f,0.0f,1.0f);
-	//}
-	//else {
-	//	litColor = float4(1.0f,1.0f, 1.0f, 1.0f);
-	//}
-	return litColor;
-
-
-//	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
-//	float4 normal = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+//	float4 diffuseAlbedo = DiffuseAlbedo;
+//	float3 fresnelR0 = FresnelR0;
+//	float  roughness = Roughness;
+//	diffuseAlbedo *= gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
+//
 //#ifdef ALPHA_TEST
 //	clip(diffuseAlbedo.a - 0.1f);
 //#endif
-//	float4 ambient = float4(0.25f, 0.25f, 0.35f, 1.0f);
-//	float4 lightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-//	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-//	float4 normalLight = dot(normal, light.Direction) * 0.5 + 0.5;
-//	float4 eye = float4 (normalize(CameraLoc - pin.PosH),1.0f);
-//	float4 highlight = lightColor * pow(dot((eye + light.Direction), normal), 256);
-//	float4 Color = diffuseAlbedo * (ambient + light.Brightness * normalLight);
-//	//float shadowFactor = ShadowCalculation(pin.ShadowPosH);
-//	//if (shadowFactor == 0) {
-//	//	diffuseAlbedo = ambient;
-//	//}
-//	return Color * (shadowFactor + 0.1);
+//	pin.TangentW = normalize(pin.TangentW);
+//	pin.Normal = normalize(pin.Normal);
+//	float4 normalMap = gNormalMap.Sample(gsamPointWrap, pin.TexC);
+//	float3 bumpedNormalW;
+//	if (normalMap.r == 0 && normalMap.g == 0 && normalMap.b == 0) {
+//		bumpedNormalW = NormalSampleToWorldSpace(normalMap.rgb, pin.Normal, pin.TangentW);
+//	}
+//	else {
+//		bumpedNormalW = pin.Normal;
+//	}
+
+
+
+	//float4 gAmbientLight = diffuseAlbedo*0.1;
+	//float4 ambient = gAmbientLight * diffuseAlbedo;
+	//float3 toEyeW = normalize(CameraLoc - pin.PosH);
+	//float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	//const float shininess = (1.0f - roughness) * normalMap.a;
+	//Material mat = { diffuseAlbedo, fresnelR0, roughness ,shininess };
+	//float4 directLight = ComputeLighting(light, mat, pin.PosH,
+	//	bumpedNormalW, toEyeW, shadowFactor);
+
+	//float4 litColor = ambient + directLight;
+	////if (litColor.x < 1.0f && litColor.y < 1.0f && litColor.z < 1.0f) {
+	////	litColor  = float4(0.0f,0.0f,0.0f,1.0f);
+	////}
+	////else {
+	////	litColor = float4(1.0f,1.0f, 1.0f, 1.0f);
+	////}
+	//return litColor;
+
+
+	float4 diffuseAlbedo = gDiffuseMap.Sample(gsamPointWrap, pin.TexC);
+	float4 normal = float4(normalize(pin.Normal),1.0f);
+#ifdef ALPHA_TEST
+	clip(diffuseAlbedo.a - 0.1f);
+#endif
+	float4 ambient = diffuseAlbedo*0.1;
+	float4 lightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	float4 normalLight = dot(normal, light.Direction) * 0.5 + 0.5;
+	float4 eye = float4 (normalize(CameraLoc - pin.PosH),1.0f);
+	float4 highlight = lightColor * pow(max(0,dot(normalize((eye + light.Direction)), normal)*0.5+0.5), 256);
+	float4 Color = diffuseAlbedo * (ambient + light.Strength/5 * normalLight)+ highlight;
+	//float shadowFactor = ShadowCalculation(pin.ShadowPosH);
+	//if (shadowFactor == 0) {
+	//	diffuseAlbedo = ambient;
+	//}
+	return Color * (shadowFactor + 0.1);
 }
 
