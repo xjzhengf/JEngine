@@ -12,6 +12,7 @@ public:
 	void SceneRender();
 	void DepthPass();
 	void BasePass();
+	void HDRPass();
 	void BuildLight(std::shared_ptr<FRenderScene> sceneResource);
 	void BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource);
 	~FRender();
@@ -21,5 +22,6 @@ private:
 	std::shared_ptr<FRenderScene> mRenderScene = nullptr;
 	std::shared_ptr<FRHIResource> mRHIResource = nullptr;
 	std::shared_ptr<FRenderResource> mShadowResource = nullptr;
+	std::shared_ptr<FRenderResource> mHDRResource = nullptr;
 	std::unique_ptr<FRHIFactory> RHIFactory = nullptr;
 };

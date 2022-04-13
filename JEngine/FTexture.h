@@ -2,10 +2,9 @@
 #include "stdafx.h"
 #include "FRenderResource.h"
 
-class FTexture : public FRenderResource {
+class FTexture  {
 public:
 	FTexture();
-	virtual void ReleaseResource()override;
 	std::string Name;
 	std::wstring FilePath;
 private:

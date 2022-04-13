@@ -7,4 +7,5 @@ public:
 	std::shared_ptr<FDynamicRHI> CreateRHI();
 	std::shared_ptr<FRHIResource> CreateRHIResource();
 	std::shared_ptr<FRenderResource> CreateShadowResource();
+	std::shared_ptr<FRenderResource> CreateHDRResource();
 };

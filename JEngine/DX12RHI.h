@@ -58,7 +58,7 @@ private:
 	void BulidDescriptorHeaps();
 	void BulidConstantBuffers(const std::string& Name, RenderItem* renderItem);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
-	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, std::shared_ptr<FRenderScene> renderScene);
+	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene);
 	void BulidRootSignature(FShader* shader);
 	void BuildPSO(std::shared_ptr<RenderItem> renderItem, FMaterial Mat) override;
 
@@ -96,7 +96,7 @@ public:
 public:
 	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderScene> renderResource, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource) override;
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource,  FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 

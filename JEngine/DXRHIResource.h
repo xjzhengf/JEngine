@@ -17,7 +17,7 @@ private:
 	std::shared_ptr<FResource> mResource;
 };
 
-enum DX_RESOURCE_STATES
+enum RESOURCE_STATES
 {
 	COMMON = 0,
 	VERTEX_AND_CONSTANT_BUFFER = 0x1,

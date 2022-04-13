@@ -2,6 +2,7 @@
 #include "FRHIFactory.h"
 #include "DX12RHI.h"
 #include "DXRHIResource.h"
+#include "FHDRResource.h"
 #include "FShadowResource.h"
 std::shared_ptr<FDynamicRHI> FRHIFactory::CreateRHI()
 {
@@ -25,6 +26,15 @@ std::shared_ptr<FRenderResource> FRHIFactory::CreateShadowResource()
 {
 #ifdef _WIN32
 	return std::make_shared<DXShadowResource>();
+#else 
+	return nullptr;
+#endif
+}
+
+std::shared_ptr<FRenderResource> FRHIFactory::CreateHDRResource()
+{
+#ifdef _WIN32
+	return std::make_shared<DXHDRResource>();
 #else 
 	return nullptr;
 #endif

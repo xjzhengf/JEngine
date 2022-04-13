@@ -6,6 +6,7 @@
 #include "MaterialManager.h"
 #include "Engine.h"
 #include "DXRHIResource.h"
+#include "FHDRResource.h"
 #include "FRenderScene.h"
 #include "FShadowResource.h"
 DX12RHI* DX12RHI::mDX12RHI = nullptr;
@@ -293,11 +294,11 @@ void DX12RHI::CreateShader(const std::wstring& filename)
 	ShaderManager::GetShaderManager()->CompileShader(filename);
 }
 
-void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource)
+void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource)
 {
 	StaticMeshInfo* MeshInfo = Engine::GetEngine()->GetAssetManager()->FindAssetByActor(*Actor);
 	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
-	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, sceneResource);
+	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, HDRResource, sceneResource);
 }
 
 
@@ -349,7 +350,7 @@ void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResou
 
 }
 
-void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, std::shared_ptr<FRenderScene> renderScene)
+void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene)
 {
 	renderScene->mRenderItem[ActorName]->ObjSrvIndex = ++offsetIndex;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
@@ -405,6 +406,12 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 		CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, ++offsetIndex, mCbvSrvUavDescriptorSize),
 		CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 1, mDsvDescriptorSize));
+    auto rtvCpuStart = mRtvHeap->GetCPUDescriptorHandleForHeapStart();
+	  dynamic_cast<DXHDRResource*>(HDRResource)->BuildDescriptors(
+		  CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, ++offsetIndex, mCbvSrvUavDescriptorSize),
+		  CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
+		  CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 2, mDsvDescriptorSize),
+		  CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvCpuStart, 2, mRtvDescriptorSize));
 	 offsetIndex++;
 }
 
@@ -684,12 +691,13 @@ void DX12RHI::CreateRtvAndDsvDescriptorHeaps()
 	rtvHeapDesc.NodeMask = 0;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	rtvHeapDesc.NumDescriptors = 3;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.NumDescriptors =2;
+	dsvHeapDesc.NumDescriptors =3;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
 }
 void DX12RHI::CreateSpawChain()

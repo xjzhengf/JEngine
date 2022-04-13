@@ -8,7 +8,3 @@ FTexture::FTexture()
     mFTexture = this;
 }
 
-void FTexture::ReleaseResource()
-{
-    delete mFTexture;
-}

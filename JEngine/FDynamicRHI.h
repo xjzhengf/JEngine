@@ -34,5 +34,5 @@ public:
 public:
 	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderScene> renderResource, const std::string& Name) = 0;
 	virtual void CreateShader( const std::wstring& filename)=0;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, std::shared_ptr<FRenderScene> sceneResource) {};
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) {};
 };

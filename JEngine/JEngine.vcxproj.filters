@@ -141,6 +141,9 @@
     <ClCompile Include="MaterialManager.cpp">
       <Filter>Manager\Source</Filter>
     </ClCompile>
+    <ClCompile Include="FHDRResource.cpp">
+      <Filter>Rander\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -251,12 +254,18 @@
     <ClInclude Include="MaterialManager.h">
       <Filter>Manager\Header</Filter>
     </ClInclude>
+    <ClInclude Include="FHDRResource.h">
+      <Filter>Rander\Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\Shadow.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\HightLight.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

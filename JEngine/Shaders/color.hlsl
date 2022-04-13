@@ -6,7 +6,7 @@
 #define Sample_RootSig \
 "RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
 "DescriptorTable(CBV(b0,numDescriptors = 2), visibility = SHADER_VISIBILITY_ALL),"\
-"DescriptorTable(SRV(t0,numDescriptors = 3), visibility = SHADER_VISIBILITY_PIXEL),"\
+"DescriptorTable(SRV(t0,numDescriptors = 4), visibility = SHADER_VISIBILITY_PIXEL),"\
 "RootConstants(b2, num32BitConstants = 3),"\
 "StaticSampler(s0," \
                 "addressU = TEXTURE_ADDRESS_WRAP," \
@@ -32,6 +32,7 @@
 Texture2D    gDiffuseMap : register(t0);
 Texture2D    gNormalMap : register(t1);
 Texture2D    gShadowMap : register(t2);
+Texture2D    gBloomMap : register(t3);
 SamplerState gsamPointWrap        : register(s0);
 SamplerComparisonState gSamShadow       : register(s1);
 SamplerState gSamLinearWrap       : register(s2);
@@ -267,14 +268,11 @@ float4 PS(VertexOut pin) : SV_Target
 	float4 ambient = diffuseAlbedo*0.1;
 	float4 lightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
-	float4 normalLight = dot(normal, light.Direction) * 0.5 + 0.5;
+	float4 normalLight = dot(normal.xyz, light.Direction) * 0.5 + 0.5;
 	float4 eye = float4 (normalize(CameraLoc - pin.PosH),1.0f);
 	float4 highlight = lightColor * pow(max(0,dot(normalize((eye + light.Direction)), normal)*0.5+0.5), 256);
 	float4 Color = diffuseAlbedo * (ambient + light.Strength/5 * normalLight)+ highlight;
-	//float shadowFactor = ShadowCalculation(pin.ShadowPosH);
-	//if (shadowFactor == 0) {
-	//	diffuseAlbedo = ambient;
-	//}
+
 	return Color * (shadowFactor + 0.1);
 }
 

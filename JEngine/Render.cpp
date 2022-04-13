@@ -2,6 +2,7 @@
 #include "Render.h"
 #include "DXRHIResource.h"
 #include "FShadowResource.h"
+#include "FHDRResource.h"
 #include "Engine.h"
 #include "SceneManager.h"
 #include "AssetManager.h"
@@ -15,6 +16,7 @@ bool FRender::Init()
 		return false;
 	}
 	mShadowResource = RHIFactory->CreateShadowResource();
+	mHDRResource = RHIFactory->CreateHDRResource();
 	return true;
 }
 
@@ -41,9 +43,10 @@ void FRender::RenderInit()
 		mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
 		CBIndex++;
 	}
-
+	mRHI->CreateShader(L"..\\JEngine\\Shaders\\HightLight.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
+
 
 
 	for (auto&& RenderItem : mRenderScene->mRenderItem)
@@ -54,7 +57,7 @@ void FRender::RenderInit()
 
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
-		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(), mRenderScene);
+		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second, mShadowResource.get(),mHDRResource.get(), mRenderScene);
 	}
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
@@ -76,7 +79,9 @@ void FRender::SceneRender()
 	}
 	//SetViewportAndScissorRect
 	DepthPass();
+	HDRPass();
 	BasePass();
+
 	//RenderFrameEnd
 	mRHI->ExecuteCommandLists();
 }
@@ -85,7 +90,7 @@ void FRender::DepthPass()
 {
 	mRHI->RSSetViewports(0.0f, 0.0f, 2048, 2048, 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, 2048, 2048);
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, DX_RESOURCE_STATES::DEPTH_WRITE);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(0, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV(),
 		0, 0, false, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->DSV());
@@ -95,7 +100,7 @@ void FRender::DepthPass()
 		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 		mRHI->DrawMesh(mRenderScene, RenderItem.first, true);
 	}
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), DX_RESOURCE_STATES::DEPTH_WRITE, DX_RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
 
 void FRender::BasePass()
@@ -103,7 +108,7 @@ void FRender::BasePass()
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 
-	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::PRESENT, DX_RESOURCE_STATES::RENDER_TARGET);
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::PRESENT, RESOURCE_STATES::RENDER_TARGET);
 	//ClearAndSetRenderTatget
 	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
 		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
@@ -114,7 +119,25 @@ void FRender::BasePass()
 		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Scene"));
 		mRHI->DrawMesh(mRenderScene, RenderItem.first, false);
 	}
-	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), DX_RESOURCE_STATES::RENDER_TARGET, DX_RESOURCE_STATES::PRESENT);
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
+}
+
+void FRender::HDRPass()
+{
+	mRHI->RSSetViewports(0.0f, 0.0f, 2048, 2048, 0.0f, 1.0f);
+	mRHI->RSSetScissorRects(0, 0, 2048, 2048);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
+	//SetRenderTatget
+	mRHI->ClearAndSetRenderTatget(std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(),
+		0, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV());
+	for (auto&& RenderItem : mRenderScene->mRenderItem)
+	{
+		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").GlobalShader);
+		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom"));
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, true);
+	}
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
+
 }
 
 

@@ -44,6 +44,19 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		mMaterialMap["ShadowMap"] = material;
 		return mMaterialMap["ShadowMap"];
 	}
+	if (MaterialName == "Bloom") {
+
+		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
+		mInputLayout =
+		{
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+		material.Name = "Bloom";
+		material.GlobalShader = L"..\\JEngine\\Shaders\\HightLight.hlsl";
+		material.mPso = pso->CreateFPSO("Bloom", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\HightLight.hlsl"));
+		mMaterialMap["Bloom"] = material;
+		return mMaterialMap["Bloom"];
+	}
 	return mMaterialMap["Default"];
 }
 
