@@ -124,17 +124,18 @@ void FRender::BasePass()
 
 void FRender::HDRPass()
 {
-	mRHI->RSSetViewports(0.0f, 0.0f, 2048, 2048, 0.0f, 1.0f);
-	mRHI->RSSetScissorRects(0, 0, 2048, 2048);
+	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
+	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
+
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(),
-		0, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV());
+		1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV());
 	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom"));
-		mRHI->DrawMesh(mRenderScene, RenderItem.first, true);
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, false);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
 

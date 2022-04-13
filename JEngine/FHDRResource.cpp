@@ -75,8 +75,8 @@ void DXHDRResource::BuildResource()
 	ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
 	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	texDesc.Alignment = 0;
-	texDesc.Width = 2048;
-	texDesc.Height = 2048;
+	texDesc.Width = Engine::GetEngine()->GetWindow()->GetClientWidht();
+	texDesc.Height = Engine::GetEngine()->GetWindow()->GetClientHeight();
 	texDesc.DepthOrArraySize = 1;
 	texDesc.MipLevels = 1;
 	texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
