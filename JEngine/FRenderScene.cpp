@@ -52,6 +52,14 @@ std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 		meshDataVector[Actor.first] = std::move(meshData);
 		//meshDataVector.push_back(std::move(meshData));
 	}
+
+	MeshData meshData;
+	meshData.indices = {0,1,2};
+	meshData.vertices.resize(3);
+	meshData.vertices[0].Pos = {-1.0f,1.0f,0.0f};
+	meshData.vertices[1].Pos = {-1.0f,-3.0f,0.0f};
+	meshData.vertices[2].Pos = {3.0f,1.0f,0.0f};
+	meshDataVector["Triangle "] = std::move(meshData);
 	return meshDataVector;
 }
 

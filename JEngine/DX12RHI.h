@@ -75,7 +75,7 @@ public:
 	void SetDescriptorHeaps();
 	void SetGraphicsRootSignature();
 
-	void BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, const std::string& MatName);
+	void BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& MatName);
 public:
 	//override RHI
 	virtual void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, int CBIndex, FMaterial Mat) override;
@@ -89,7 +89,7 @@ public:
 	virtual void ChangePSOState(FMaterial Mat, const PipelineState& PSO, const std::wstring& Shader)override;
 
 
-	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName) override;
+	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& MatName) override;
 	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV) override;
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
 		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;

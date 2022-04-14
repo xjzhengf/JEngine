@@ -27,7 +27,7 @@ public:
 	virtual void ExecuteCommandLists() = 0;
 	virtual void CreateTextureResource(std::shared_ptr<FRenderScene> renderResource, FTexture* TextureResource, bool isNormal) = 0;
 
-	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName) =0;
+	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& MatName) =0;
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand, bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) = 0;
 	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV) = 0;
 

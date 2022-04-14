@@ -210,56 +210,54 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 
 
 
-void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, const std::string& MatName)
+void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& MatName)
 {
 
-	if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
-		return;
-	}
-	std::unordered_map<std::string, MeshData> meshData = sceneResource->BuildMeshData();
-	//std::string glod = std::string("StaticMeshActor_5");
-	/*glod.resize(glod.size()+1);*/
-	//if (Name == glod) {
-	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.DiffuseAlbedo= { 1.0f, 1.0f, 1.0f, 1.0f };
-	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.FresnelR0= { 0.5f, 0.5f, 0.5f };
-	//	sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.Roughness= 0.01f;
+	//if (sceneResource->mRenderItem[Name]->mGeo->Name != "") {
+	//	return;
 	//}
-	sceneResource->mRenderItem[Name]->MatName = MatName;
-	const UINT vbByteSize = (UINT)meshData[Name].vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)meshData[Name].indices.size() * sizeof(uint32_t);
-	sceneResource->mRenderItem[Name]->mGeo->Name = Name;
-	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU));
-	CopyMemory(sceneResource->mRenderItem[Name]->mGeo->VertexBufferCPU->GetBufferPointer(), meshData[Name].vertices.data(), vbByteSize);
 
-	ThrowIfFailed(D3DCreateBlob(ibByteSize, &sceneResource->mRenderItem[Name]->mGeo->IndexBufferCPU));
-	CopyMemory(sceneResource->mRenderItem[Name]->mGeo->IndexBufferCPU->GetBufferPointer(), meshData[Name].indices.data(), ibByteSize);
+	std::unordered_map<std::string, MeshData> meshDataMap = sceneResource->BuildMeshData();
+	for (auto&& meshDataPair : meshDataMap)
+	{
+		if (sceneResource->mRenderItem[meshDataPair.first] == nullptr) {
+			sceneResource->mRenderItem[meshDataPair.first] = std::make_shared<RenderItem>();
+		}
+		if (sceneResource->mRenderItem[meshDataPair.first]->mGeo == nullptr) {
+			sceneResource->mRenderItem[meshDataPair.first]->mGeo = std::make_unique<DXBuffer>();
+		}
+	sceneResource->mRenderItem[meshDataPair.first]->MatName = MatName;
+	const UINT vbByteSize = (UINT)meshDataPair.second.vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)meshDataPair.second.indices.size() * sizeof(uint32_t);
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->Name = meshDataPair.first;
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexBufferCPU));
+	CopyMemory(sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexBufferCPU->GetBufferPointer(), meshDataPair.second.vertices.data(), vbByteSize);
 
-	sceneResource->mRenderItem[Name]->mGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), meshData[Name].vertices.data(), vbByteSize, sceneResource->mRenderItem[Name]->mGeo->VertexBufferUploader);
-	sceneResource->mRenderItem[Name]->mGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), meshData[Name].indices.data(), ibByteSize, sceneResource->mRenderItem[Name]->mGeo->IndexBufferUploader);
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexBufferCPU));
+	CopyMemory(sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexBufferCPU->GetBufferPointer(), meshDataPair.second.indices.data(), ibByteSize);
 
-	sceneResource->mRenderItem[Name]->mGeo->VertexByteStride = sizeof(Vertex);
-	sceneResource->mRenderItem[Name]->mGeo->VertexBufferByteSize = vbByteSize;
-	sceneResource->mRenderItem[Name]->mGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
-	sceneResource->mRenderItem[Name]->mGeo->IndexBufferByteSize = ibByteSize;
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), meshDataPair.second.vertices.data(), vbByteSize, sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexBufferUploader);
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), meshDataPair.second.indices.data(), ibByteSize, sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexBufferUploader);
+
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexByteStride = sizeof(Vertex);
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->VertexBufferByteSize = vbByteSize;
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->IndexBufferByteSize = ibByteSize;
 
 	SubmeshGeometry submesh;
-	submesh.IndexCount = (UINT)meshData[Name].indices.size();
+	submesh.IndexCount = (UINT)meshDataPair.second.indices.size();
 
-	submesh.StartIndexLocation = sceneResource->mRenderItem[Name]->StartIndexLocation;
-	submesh.BaseVertexLocation = sceneResource->mRenderItem[Name]->BaseVertexLocation;
+	submesh.StartIndexLocation = sceneResource->mRenderItem[meshDataPair.first]->StartIndexLocation;
+	submesh.BaseVertexLocation = sceneResource->mRenderItem[meshDataPair.first]->BaseVertexLocation;
 
-	sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name] = submesh;
+	sceneResource->mRenderItem[meshDataPair.first]->mGeo->DrawArgs[meshDataPair.first] = submesh;
+	}
 }
 
-void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName)
+void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& MatName)
 {
-	if (renderResource->mRenderItem[ActorName] == nullptr) {
-		renderResource->mRenderItem[ActorName] = std::make_shared<RenderItem>();
-	}
-	if (renderResource->mRenderItem[ActorName]->mGeo == nullptr) {
-		renderResource->mRenderItem[ActorName]->mGeo = std::make_unique<DXBuffer>();
-	}
-	BuildRenderItem(renderResource, ActorName, MatName);
+
+	BuildRenderItem(renderResource,MatName);
 }
 
 void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth,bool isNeedRTV)

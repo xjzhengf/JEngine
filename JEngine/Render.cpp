@@ -38,11 +38,9 @@ void FRender::RenderInit()
 	}
 
 	mRHI->ResetCommand("Null");
-	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
-	{
-		mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
-		CBIndex++;
-	}
+
+	mRHI->RenderFrameBegin(mRenderScene, "ShadowMap");
+	
 	mRHI->CreateShader(L"..\\JEngine\\Shaders\\HightLight.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
@@ -70,7 +68,7 @@ void FRender::SceneRender()
 	for (auto&& Actor : SceneManager::GetSceneManager()->GetAllActor())
 	{
 		//RenderFrameBegin
-		mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
+		//mRHI->RenderFrameBegin(mRenderScene, Actor.first, CBIndex, "ShadowMap");
 		mRHI->UpdateCB(mRenderScene, Actor.first, CBIndex, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 		CBIndex++;
 	}
