@@ -6,7 +6,8 @@
 #define Sample_RootSig \
 "RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
 "DescriptorTable(CBV(b0,numDescriptors = 2), visibility = SHADER_VISIBILITY_ALL),"\
-"DescriptorTable(SRV(t0,numDescriptors = 4), visibility = SHADER_VISIBILITY_PIXEL),"\
+"DescriptorTable(SRV(t0,numDescriptors = 3), visibility = SHADER_VISIBILITY_PIXEL),"\
+"DescriptorTable(SRV(t3,numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL),"\
 "RootConstants(b2, num32BitConstants = 3),"\
 "StaticSampler(s0," \
                 "addressU = TEXTURE_ADDRESS_WRAP," \
@@ -59,7 +60,7 @@ cbuffer materialConstants : register(b1)
 	float4x4 MatTransform ;
 };
 float3 CameraLoc : register(b2);
-
+int2 RenderTargetSize : register(b3);
 struct VertexIn
 {
 	float3 PosL  : POSITION;

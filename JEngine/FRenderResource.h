@@ -10,7 +10,6 @@ public:
 	virtual void ReleaseResource() {};
 	static bool mRenderUpdate;
 };
-
 enum RESOURCE_FLAGS
 {
 	RESOURCE_FLAG_NONE = 0,

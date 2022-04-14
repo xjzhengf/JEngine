@@ -262,11 +262,11 @@ void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, con
 	BuildRenderItem(renderResource, ActorName, MatName);
 }
 
-void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth)
+void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth,bool isNeedRTV)
 {
 	IASetVertexAndIndexBuffers(CreateBuffer(renderResource, renderItemName));
 	IASetPrimitiveTopology();
-	SetGraphicsRootDescriptorTable(renderResource->mRenderItem[renderItemName].get(), IsDrawDepth);
+	SetGraphicsRootDescriptorTable(renderResource->mRenderItem[renderItemName].get(), IsDrawDepth, isNeedRTV);
 	DrawIndexedInstanced(renderResource, renderItemName);
 }
 
@@ -412,6 +412,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 		  CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 2, mDsvDescriptorSize),
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvCpuStart, 2, mRtvDescriptorSize));
+	  renderScene->mRenderItem[ActorName]->ObjRtvIndex = offsetIndex;
 	 offsetIndex++;
 }
 
@@ -588,7 +589,7 @@ void DX12RHI::IASetPrimitiveTopology()
 }
 
 
-void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth)
+void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth,bool isNeedRTV)
 {
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	//mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
@@ -596,16 +597,23 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 	hDescriptor.Offset(renderItem->ObjCBIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	mCommandList->SetGraphicsRootDescriptorTable(0, hDescriptor);
 	if (!isDepth) {
+		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
+		hDescriptor2.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor2);
+	}
+	if (isNeedRTV) {
 		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor3(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
-		hDescriptor3.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor3);
+		hDescriptor3.Offset(renderItem->ObjRtvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		mCommandList->SetGraphicsRootDescriptorTable(2, hDescriptor3);
 	}
 	SetGraphicsRoot32BitConstants();
 }
 
 void DX12RHI::SetGraphicsRoot32BitConstants()
 {
-	mCommandList->SetGraphicsRoot32BitConstants(2, 3, &cameraLoc, 0);
+	mCommandList->SetGraphicsRoot32BitConstants(3, 3, &cameraLoc, 0);
+	int RenderTargetSize[2] = {Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight()};
+	mCommandList->SetGraphicsRoot32BitConstants(3, 2, &RenderTargetSize, 0);
 }
 
 void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem,FMaterial Mat)

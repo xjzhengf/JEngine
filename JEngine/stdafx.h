@@ -45,4 +45,6 @@
 #include "D3DUtil.h"
 #include "RenderItem.h"
 #define _CRTDBG_MAP_ALLOC
+
+using namespace DirectX;
 using CallBackInString = std::function<void(std::string)>;

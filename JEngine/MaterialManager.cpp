@@ -19,7 +19,7 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
 		mInputLayout =
 		{
-			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+					{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{ "COLOR", 0, FORMAT_R32G32B32A32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{ "NORMAL", 0, FORMAT_R32G32B32_FLOAT, 0, 28, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 40, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -36,7 +36,7 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
 		mInputLayout =
 		{
-			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		};
 		material.Name = "ShadowMap";
 		material.GlobalShader = L"..\\JEngine\\Shaders\\Shadow.hlsl";

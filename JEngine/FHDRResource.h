@@ -4,7 +4,8 @@
 class FHDRResource :public FRenderResource {
 public:
 	virtual void ReleaseResource() {};
-	virtual std::shared_ptr<FResource> GetResource() = 0;
+	virtual std::shared_ptr<FResource> GetRTVResource() = 0;
+	virtual std::shared_ptr<FResource> GetDSVResource() = 0;
 	virtual unsigned __int64 SRV() = 0;
 	virtual unsigned __int64 DSV() = 0;
 	virtual unsigned __int64 RTV() = 0;
@@ -18,7 +19,8 @@ public:
 	DXHDRResource& operator=(const DXHDRResource& rhs) = delete;
 	~DXHDRResource();
 
-	virtual std::shared_ptr<FResource> GetResource() override;
+	virtual std::shared_ptr<FResource> GetRTVResource() override;
+	virtual std::shared_ptr<FResource> GetDSVResource() override;
 	virtual unsigned __int64 SRV() override;
 	virtual unsigned __int64 DSV()override;
 	virtual unsigned __int64 RTV() override;
@@ -40,4 +42,5 @@ private:
 	std::shared_ptr<FResource> mResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mHDR = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mShadow = nullptr;
+
 };

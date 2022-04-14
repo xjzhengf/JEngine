@@ -46,9 +46,6 @@ void FRender::RenderInit()
 	mRHI->CreateShader(L"..\\JEngine\\Shaders\\HightLight.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
 	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
-
-
-
 	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
@@ -98,7 +95,7 @@ void FRender::DepthPass()
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
-		mRHI->DrawMesh(mRenderScene, RenderItem.first, true);
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, true,false);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
@@ -117,7 +114,7 @@ void FRender::BasePass()
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Scene").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Scene").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Scene"));
-		mRHI->DrawMesh(mRenderScene, RenderItem.first, false);
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, false,true);
 	}
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
 }
@@ -126,8 +123,8 @@ void FRender::HDRPass()
 {
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
-
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(),
 		1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV());
@@ -135,10 +132,10 @@ void FRender::HDRPass()
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom"));
-		mRHI->DrawMesh(mRenderScene, RenderItem.first, false);
+		mRHI->DrawMesh(mRenderScene, RenderItem.first, false,false);
 	}
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetResource(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
-
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
 
 

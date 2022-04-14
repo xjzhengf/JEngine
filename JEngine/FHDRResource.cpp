@@ -13,9 +13,15 @@ DXHDRResource::~DXHDRResource()
 {
 }
 
-std::shared_ptr<FResource> DXHDRResource::GetResource()
+std::shared_ptr<FResource> DXHDRResource::GetRTVResource()
 {
 	mResource->Resource = mHDR.Get();
+	return mResource;
+}
+
+std::shared_ptr<FResource> DXHDRResource::GetDSVResource()
+{
+	mResource->Resource = mShadow.Get();
 	return mResource;
 }
 
@@ -85,11 +91,16 @@ void DXHDRResource::BuildResource()
 	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
+
 	D3D12_CLEAR_VALUE optClear;
 	optClear.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	optClear.DepthStencil.Depth = 1.0f;
 	optClear.DepthStencil.Stencil = 0;
-
+	FLOAT Color[4] = { 0.690196097f, 0.768627524f, 0.870588303f, 1.000000000f };
+	optClear.Color[0] = Color[0];
+	optClear.Color[1] = Color[1];
+	optClear.Color[2] = Color[2];
+	optClear.Color[3] = Color[3];
 	ThrowIfFailed(DX12RHI::GetDX12RHI()->GetDevice()->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,

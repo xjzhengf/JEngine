@@ -16,7 +16,7 @@
 #pragma comment(lib, "dxgi.lib")
 
 using Microsoft::WRL::ComPtr;
-using namespace DirectX;
+
 using namespace DirectX::PackedVector;
 
 
@@ -65,7 +65,7 @@ private:
 public:
 	void IASetVertexAndIndexBuffers(Buffer* buffer);
 	void IASetPrimitiveTopology();
-	void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth);
+	void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth, bool isNeedRTV);
 	void DrawIndexedInstanced(std::shared_ptr<FRenderScene> renderResource, const std::string& Name);
 	void SetGraphicsRoot32BitConstants();
 	void ClearRenderTargetView(unsigned __int64 ptr);
@@ -90,7 +90,7 @@ public:
 
 
 	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& ActorName, int RenderItemIndex, const std::string& MatName) override;
-	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth) override;
+	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV) override;
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
 		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;
 public:

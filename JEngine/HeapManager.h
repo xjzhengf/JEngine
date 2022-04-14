@@ -7,9 +7,3 @@ public:
 	void DeleteDesc();
 	int offsetIndex = 0;
 };
-
-enum DescType {
-	CBV = 0,
-	SRV = 1,
-	UAV = 2
-};
