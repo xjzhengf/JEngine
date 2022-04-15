@@ -53,13 +53,13 @@ std::unordered_map<std::string, MeshData>& FRenderScene::BuildMeshData()
 		//meshDataVector.push_back(std::move(meshData));
 	}
 
-	MeshData meshData;
-	meshData.indices = {0,1,2};
-	meshData.vertices.resize(3);
-	meshData.vertices[0].Pos = {-1.0f,1.0f,0.0f};
-	meshData.vertices[1].Pos = {-1.0f,-3.0f,0.0f};
-	meshData.vertices[2].Pos = {3.0f,1.0f,0.0f};
-	meshDataVector["Triangle "] = std::move(meshData);
+	HDRGeo = std::make_unique<MeshData>();
+	HDRTriangle = std::make_shared<RenderItem>();
+	HDRGeo->indices = {0,1,2};
+	HDRGeo->vertices.resize(3);
+	HDRGeo->vertices[0].Pos = {-1.0f,1.0f,0.0f};
+	HDRGeo->vertices[1].Pos = {-1.0f,-3.0f,0.0f};
+	HDRGeo->vertices[2].Pos = {3.0f,1.0f,0.0f};
 	return meshDataVector;
 }
 

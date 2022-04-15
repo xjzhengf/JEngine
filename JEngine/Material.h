@@ -7,7 +7,7 @@ struct FMaterialConstants
 {
 	glm::vec4 DiffuseAlbedo = { 1.0f,1.0f, 1.0f, 1.0f };
 	glm::vec3 FresnelR0 = { 0.1f, 0.1f, 0.1f };
-	float Roughness = 0.5f;
+	float Roughness = 0.01f;
 	// Used in texture mapping.
 	glm::mat4x4 MatTransform = glm::identity<glm::mat4x4>();
 };

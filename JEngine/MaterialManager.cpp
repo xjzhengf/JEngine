@@ -15,21 +15,50 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 			return mMaterialMap[MaterialName];
 		}
 	//}
-	if (MaterialName == "Scene") {
+	if (MaterialName == "BloomSet") {
 		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
 		mInputLayout =
 		{
-					{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, FORMAT_R32G32B32A32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, FORMAT_R32G32B32_FLOAT, 0, 28, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 40, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-			{"TANGENT", 0, FORMAT_R32G32B32_FLOAT, 0, 48, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"UV", 0, FORMAT_R32G32_FLOAT, 0, 24, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+
 		};
-		material.Name = "Scene";
+		material.Name = "BloomSet";
 		material.GlobalShader = L"..\\JEngine\\Shaders\\color.hlsl";
-		material.mPso = pso->CreateFPSO("Scene", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\color.hlsl"));		
-		mMaterialMap["Scene"] = material;
-		return mMaterialMap["Scene"];
+		material.mPso = pso->CreateFPSO("BloomSet", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\color.hlsl"));		
+		mMaterialMap["BloomSet"] = material;
+		return mMaterialMap["BloomSet"];
+	}
+	if (MaterialName == "BloomDown") {
+		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
+		mInputLayout =
+		{
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"UV", 0, FORMAT_R32G32_FLOAT, 0, 24, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+
+		};
+		material.Name = "BloomDown";
+		material.GlobalShader = L"..\\JEngine\\Shaders\\BloomDown.hlsl";
+		material.mPso = pso->CreateFPSO("BloomDown", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\BloomDown.hlsl"));
+		mMaterialMap["BloomDown"] = material;
+		return mMaterialMap["BloomDown"];
+	}
+	if (MaterialName == "BloomUp") {
+		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
+		mInputLayout =
+		{
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"UV", 0, FORMAT_R32G32_FLOAT, 0, 24, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+
+		};
+		material.Name = "BloomUp";
+		material.GlobalShader = L"..\\JEngine\\Shaders\\BloomUp.hlsl";
+		material.mPso = pso->CreateFPSO("BloomUp", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\BloomUp.hlsl"));
+		mMaterialMap["BloomUp"] = material;
+		return mMaterialMap["BloomUp"];
 	}
 	if (MaterialName == "ShadowMap") {
 
@@ -59,6 +88,7 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		material.GlobalShader = L"..\\JEngine\\Shaders\\HightLight.hlsl";
 		material.mPso = pso->CreateFPSO("Bloom", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\HightLight.hlsl"));
 		mMaterialMap["Bloom"] = material;
+
 		return mMaterialMap["Bloom"];
 	}
 	return mMaterialMap["Default"];

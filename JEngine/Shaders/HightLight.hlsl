@@ -1,45 +1,4 @@
-//***************************************************************************************
-// color.hlsl by Frank Luna (C) 2015 All Rights Reserved.
-//
-// Transforms and colors geometry.
-//***************************************************************************************
-#define Sample_RootSig \
-"RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT )," \
-"DescriptorTable(CBV(b0,numDescriptors = 2), visibility = SHADER_VISIBILITY_ALL),"\
-"DescriptorTable(SRV(t0,numDescriptors = 3), visibility = SHADER_VISIBILITY_PIXEL),"\
-"DescriptorTable(SRV(t3,numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL),"\
-"RootConstants(b2, num32BitConstants = 3),"\
-"StaticSampler(s0," \
-                "addressU = TEXTURE_ADDRESS_WRAP," \
-                "addressV = TEXTURE_ADDRESS_WRAP," \
-                "addressW = TEXTURE_ADDRESS_WRAP," \
-                "filter = FILTER_MIN_MAG_MIP_POINT),"\
-"StaticSampler(s1," \
-                "addressU = TEXTURE_ADDRESS_BORDER," \
-                "addressV = TEXTURE_ADDRESS_BORDER," \
-                "addressW = TEXTURE_ADDRESS_BORDER," \
-                "filter = FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,"\
-                "mipLODBias =0 ,"\
-                "maxAnisotropy = 16,"\
-                "comparisonFunc = COMPARISON_LESS_EQUAL,"\
-                "borderColor = STATIC_BORDER_COLOR_OPAQUE_BLACK),"\
-"StaticSampler(s2," \
-"addressU = TEXTURE_ADDRESS_WRAP," \
-"addressV = TEXTURE_ADDRESS_WRAP," \
-"addressW = TEXTURE_ADDRESS_WRAP," \
-"filter = FILTER_MIN_MAG_MIP_LINEAR)"
-
-
-Texture2D    gDiffuseMap : register(t0);
-Texture2D    gNormalMap : register(t1);
-Texture2D    gShadowMap : register(t2);
-Texture2D    gBloomMap : register(t3);
-SamplerState gsamPointWrap        : register(s0);
-SamplerComparisonState gSamShadow       : register(s1);
-SamplerState gSamLinearWrap       : register(s2);
-//SamplerState gsamLinearClamp      : register(s3);
-//SamplerState gsamAnisotropicWrap  : register(s4);
-//SamplerState gsamAnisotropicClamp : register(s5);
+#include"RenderHead.hlsli"
 
 struct Light {
 	float Strength;
@@ -53,7 +12,7 @@ struct Material {
 	float Shininess;
 };
 
-cbuffer cbPerObject : register(b0)
+cbuffer cbPerObject : register(b2)
 {
 	float4x4 tLightViewProj;
 	float4x4 gLightViewProj;
@@ -64,15 +23,13 @@ cbuffer cbPerObject : register(b0)
 	float Time;
 	Light light;
 };
-cbuffer materialConstants : register(b1)
+cbuffer materialConstants : register(b3)
 {
 	float4 DiffuseAlbedo;
 	float3 FresnelR0;
 	float Roughness;
 	float4x4 MatTransform;
 };
-float3 CameraLoc : register(b2);
-int2 RenderTargetSize : register(b3);
 struct VertexIn
 {
 	float3 PosL  : POSITION;
@@ -172,7 +129,7 @@ float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEy
 
 	// Scale light down by Lambert's cosine law.
 	float ndotl = max(dot(lightVec, normal) * 0.5 + 0.5, 0.0f);
-	float3 lightStrength = L.Strength / 3 * ndotl;
+	float3 lightStrength = L.Strength /2 * ndotl;
 
 	return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
 }
@@ -247,12 +204,6 @@ float4 PS(VertexOut pin) : SV_Target
 	float4 directLight = ComputeLighting(light, mat, pin.PosH,
 		bumpedNormalW, toEyeW, shadowFactor);
 	float4 litColor = ambient + directLight;
-	//if (litColor.x < 1.0f && litColor.y < 1.0f && litColor.z < 1.0f) {
-	//	litColor  = float4(0.0f,0.0f,0.0f,1.0f);
-	//}
-	//else {
-	//	litColor = float4(1.0f,1.0f, 1.0f, 1.0f);
-	//}
 	return litColor;
 }
 

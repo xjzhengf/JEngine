@@ -4,12 +4,14 @@
 class FHDRResource :public FRenderResource {
 public:
 	virtual void ReleaseResource() {};
-	virtual std::shared_ptr<FResource> GetRTVResource() = 0;
-	virtual std::shared_ptr<FResource> GetDSVResource() = 0;
-	virtual unsigned __int64 SRV() = 0;
-	virtual unsigned __int64 DSV() = 0;
-	virtual unsigned __int64 RTV() = 0;
+	virtual std::shared_ptr<FResource> GetRTVResource(int index) = 0;
+	virtual std::shared_ptr<FResource> GetDSVResource(int index) = 0;
+	virtual unsigned __int64 SRV(int index) = 0;
+	virtual unsigned __int64 DSV(int index) = 0;
+	virtual unsigned __int64 RTV(int index) = 0;
 
+	std::vector<int> width;
+	std::vector<int> height;
 };
 
 class DXHDRResource : public FHDRResource {
@@ -19,28 +21,36 @@ public:
 	DXHDRResource& operator=(const DXHDRResource& rhs) = delete;
 	~DXHDRResource();
 
-	virtual std::shared_ptr<FResource> GetRTVResource() override;
-	virtual std::shared_ptr<FResource> GetDSVResource() override;
-	virtual unsigned __int64 SRV() override;
-	virtual unsigned __int64 DSV()override;
-	virtual unsigned __int64 RTV() override;
+	virtual std::shared_ptr<FResource> GetRTVResource(int index) override;
+	virtual std::shared_ptr<FResource> GetDSVResource(int index) override;
+	virtual unsigned __int64 SRV(int index)override;
+	virtual unsigned __int64 DSV(int index)override;
+	virtual unsigned __int64 RTV(int index)override;
 
 	void BuildDescriptors(
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSrv,
 		CD3DX12_GPU_DESCRIPTOR_HANDLE hGpuSrv,
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuDsv,
-		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuRtv
+		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuRtv,
+		int index,
+		int width, 
+		int height
 	);
+
+
+	int HDRSize = 5;
 private:
-	void BuildDescriptors();
-	void BuildResource();
+	void BuildDescriptors(int index);
+	void BuildResource(int width, int height, int index);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE mhCpuSrv;
-	CD3DX12_GPU_DESCRIPTOR_HANDLE mhGpuSrv;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE mhCpuDsv;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE mhCpuRtv;
+	std::vector < CD3DX12_CPU_DESCRIPTOR_HANDLE> mhCpuSrv;
+	std::vector < CD3DX12_GPU_DESCRIPTOR_HANDLE >mhGpuSrv;
+	std::vector < CD3DX12_CPU_DESCRIPTOR_HANDLE >mhCpuDsv;
+	std::vector < CD3DX12_CPU_DESCRIPTOR_HANDLE >mhCpuRtv;
 	std::shared_ptr<FResource> mResource;
-	Microsoft::WRL::ComPtr<ID3D12Resource> mHDR = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> mShadow = nullptr;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> mHDRs;
+	std::vector < Microsoft::WRL::ComPtr<ID3D12Resource>> mShadows;
 
+
+	int currentIndex = 0;
 };

@@ -130,7 +130,7 @@ void DX12RHI::OnResize()
 
 	mScissorRect = { 0,0,mClientWidht,mClientHeight };
 
-	SceneManager::GetSceneManager()->GetCamera()->SetCameraPos(2000.0f, 2000.0f, 2000.0f);
+	SceneManager::GetSceneManager()->GetCamera()->SetCameraPos(762.0f, -1862.0f, 1718.0f);
 	SceneManager::GetSceneManager()->GetCamera()->SetLens(0.25f * glm::pi<float>(), AspectRatio(), 1.0f, 10000.0f);
 	SceneManager::GetSceneManager()->GetCamera()->LookAt(SceneManager::GetSceneManager()->GetCamera()->GetCameraPos3f(), 
 	glm::vec3(0.0f, 0.0f, 0.0f), SceneManager::GetSceneManager()->GetCamera()->GetUp());
@@ -180,9 +180,9 @@ void DX12RHI::SetClientWidht(int Width)
 
 void DX12RHI::SetClientHeight(int Height)
 {
-	this->mClientHeight = Height;
+	this->mClientHeight = Height ;
 }
-void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name,int CBIndex,FMaterial Mat)
+void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,RenderItem* renderItem,const std::string& Name,int CBIndex,FMaterial Mat)
 {
 	Time = Engine::GetEngine()->Time;
 	cameraLoc = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetCameraPos3f();
@@ -193,8 +193,8 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		glm::mat4x4 view = Engine::GetEngine()->GetSceneManager()->GetCamera()->GetView4x4();
 		objConstants.ViewProj = glm::transpose(proj * view);
 		objConstants.TLightViewProj = sceneResource->TLightViewProj;
-		objConstants.World = sceneResource->mRenderItem[Name]->World;
-		objConstants.Rotation = sceneResource->mRenderItem[Name]->Rotation;
+		objConstants.World = renderItem->World;
+		objConstants.Rotation = renderItem->Rotation;
 		//objConstants.TexTransform = glm::transpose(sceneResource->mRenderItem[Name]->MatTransform) * sceneResource->mRenderItem[Name]->Scale;
 		objConstants.directionalLight.Brightness = Engine::GetEngine()->GetSceneManager()->DirectionalLight.Brightness;
 		objConstants.directionalLight.Direction = sceneResource->LightDirection;
@@ -205,6 +205,12 @@ void DX12RHI::UpdateCB(std::shared_ptr<FRenderScene> sceneResource,const std::st
 		materialConstants = Mat.mMaterialConstants;
 		//materialConstants.MatTransform = glm::transpose(sceneResource->mRenderItem[Name]->Mat.mMaterialConstants.MatTransform);
 		mMaterialCB->CopyData(CBIndex, materialConstants);
+		//OutputDebugStringA(std::to_string(cameraLoc.x).c_str());
+		//OutputDebugStringA("   ");
+		//OutputDebugStringA(std::to_string(cameraLoc.y).c_str());
+		//OutputDebugStringA("   ");
+		//OutputDebugStringA(std::to_string(cameraLoc.z).c_str());
+		//OutputDebugStringA("\n");
 
 }
 
@@ -252,6 +258,38 @@ void DX12RHI::BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const
 
 	sceneResource->mRenderItem[meshDataPair.first]->mGeo->DrawArgs[meshDataPair.first] = submesh;
 	}
+	//Build HDRTriangle
+	if (sceneResource->HDRTriangle == nullptr) {
+		sceneResource->HDRTriangle = std::make_shared<RenderItem>();
+	}
+	if (sceneResource->HDRTriangle->mGeo == nullptr) {
+		sceneResource->HDRTriangle->mGeo = std::make_unique<DXBuffer>();
+	}
+	sceneResource->HDRTriangle->MatName = MatName;
+	const UINT vbByteSize = (UINT)sceneResource->HDRGeo->vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)sceneResource->HDRGeo->indices.size() * sizeof(uint32_t);
+	sceneResource->HDRTriangle->mGeo->Name = "HDRTriangle";
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &sceneResource->HDRTriangle->mGeo->VertexBufferCPU));
+	CopyMemory(sceneResource->HDRTriangle->mGeo->VertexBufferCPU->GetBufferPointer(), sceneResource->HDRGeo->vertices.data(), vbByteSize);
+
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &sceneResource->HDRTriangle->mGeo->IndexBufferCPU));
+	CopyMemory(sceneResource->HDRTriangle->mGeo->IndexBufferCPU->GetBufferPointer(), sceneResource->HDRGeo->indices.data(), ibByteSize);
+
+	sceneResource->HDRTriangle->mGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), sceneResource->HDRGeo->vertices.data(), vbByteSize, sceneResource->HDRTriangle->mGeo->VertexBufferUploader);
+	sceneResource->HDRTriangle->mGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), sceneResource->HDRGeo->indices.data(), ibByteSize, sceneResource->HDRTriangle->mGeo->IndexBufferUploader);
+
+	sceneResource->HDRTriangle->mGeo->VertexByteStride = sizeof(Vertex);
+	sceneResource->HDRTriangle->mGeo->VertexBufferByteSize = vbByteSize;
+	sceneResource->HDRTriangle->mGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
+	sceneResource->HDRTriangle->mGeo->IndexBufferByteSize = ibByteSize;
+
+	SubmeshGeometry submesh;
+	submesh.IndexCount = (UINT)sceneResource->HDRGeo->indices.size();
+
+	submesh.StartIndexLocation = sceneResource->HDRTriangle->StartIndexLocation;
+	submesh.BaseVertexLocation = sceneResource->HDRTriangle->BaseVertexLocation;
+
+	sceneResource->HDRTriangle->mGeo->DrawArgs["HDRTriangle"] = submesh;
 }
 
 void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& MatName)
@@ -260,12 +298,12 @@ void DX12RHI::RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, con
 	BuildRenderItem(renderResource,MatName);
 }
 
-void DX12RHI::DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName,bool IsDrawDepth,bool isNeedRTV)
+void DX12RHI::DrawMesh(std::shared_ptr<RenderItem> renderItem, const std::string& renderItemName,bool IsDrawDepth,bool isNeedRTV, int RTVNumber,int width,int height)
 {
-	IASetVertexAndIndexBuffers(CreateBuffer(renderResource, renderItemName));
+	IASetVertexAndIndexBuffers(CreateBuffer(renderItem, renderItemName));
 	IASetPrimitiveTopology();
-	SetGraphicsRootDescriptorTable(renderResource->mRenderItem[renderItemName].get(), IsDrawDepth, isNeedRTV);
-	DrawIndexedInstanced(renderResource, renderItemName);
+	SetGraphicsRootDescriptorTable(renderItem.get(), IsDrawDepth, isNeedRTV,RTVNumber, width,height);
+	DrawIndexedInstanced(renderItem, renderItemName);
 }
 
 void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand, bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand)
@@ -273,7 +311,9 @@ void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, un
 	if (ClearRenderTargetHand != 0) {
 		ClearRenderTargetView(ClearRenderTargetHand);
 	}
+	if (ClearDepthStencilHand != 0) {
 	ClearDepthStencilView(ClearDepthStencilHand);
+	}
 	OMSetRenderTargets(numTatgetDescriptors, SetRenderTargetHand, RTsSingleHandleToDescriptorRange, SetDepthStencilHand);
 	SetDescriptorHeaps();
 	SetGraphicsRootSignature();
@@ -281,9 +321,9 @@ void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, un
 
 
 
-Buffer* DX12RHI::CreateBuffer(std::shared_ptr<FRenderScene> sceneResource,const std::string& Name)
+Buffer* DX12RHI::CreateBuffer(std::shared_ptr<RenderItem> renderItem,const std::string& Name)
 {
-	return sceneResource->mRenderItem[Name]->mGeo.get();
+	return renderItem->mGeo.get();
 }
 
 
@@ -292,11 +332,10 @@ void DX12RHI::CreateShader(const std::wstring& filename)
 	ShaderManager::GetShaderManager()->CompileShader(filename);
 }
 
-void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource)
+void DX12RHI::CreateCbHeapsAndSrv(const std::string& ActorName, const std::string& MeshName,RenderItem* renderItem, FRenderResource* shadowResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource)
 {
-	StaticMeshInfo* MeshInfo = Engine::GetEngine()->GetAssetManager()->FindAssetByActor(*Actor);
-	BulidConstantBuffers(ActorName, sceneResource->mRenderItem[ActorName].get());
-	BuildShaderResourceView(ActorName, MeshInfo->StaticMeshName, shadowResource, HDRResource, sceneResource);
+	BulidConstantBuffers(ActorName, renderItem);
+	BuildShaderResourceView(ActorName, renderItem, MeshName, shadowResource, HDRResource, sceneResource);
 }
 
 
@@ -348,9 +387,9 @@ void DX12RHI::BuildMaterial(const std::string& Name,FRenderResource* RenderResou
 
 }
 
-void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene)
+void DX12RHI::BuildShaderResourceView(const std::string& ActorName,RenderItem* renderItem, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene)
 {
-	renderScene->mRenderItem[ActorName]->ObjSrvIndex = ++offsetIndex;
+	renderItem->ObjSrvIndex = ++offsetIndex;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetCPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(offsetIndex, mCbvSrvUavDescriptorSize);
 	std::string ResourceName;
@@ -405,13 +444,29 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName, const std::s
 		CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 1, mDsvDescriptorSize));
     auto rtvCpuStart = mRtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	for (int i=0;i<dynamic_cast<DXHDRResource*>(HDRResource)->HDRSize;i++)
+	{
+		float scale= 1.0f;
+		if (i == 1) {
+			scale = 0.25;
+		}
+		if (i == 2) {
+			scale = 0.25*0.5;
+		}
+		if (i >= 3) {
+			scale = 0.25 *(i - 2) ;
+		}
 	  dynamic_cast<DXHDRResource*>(HDRResource)->BuildDescriptors(
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, ++offsetIndex, mCbvSrvUavDescriptorSize),
 		  CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 2, mDsvDescriptorSize),
-		  CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvCpuStart, 2, mRtvDescriptorSize));
-	  renderScene->mRenderItem[ActorName]->ObjRtvIndex = offsetIndex;
-	 offsetIndex++;
+		  CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvCpuStart, i+2, mRtvDescriptorSize),
+		  i,1024* scale,768* scale);
+
+	 renderItem->ObjRtvIndex.push_back(offsetIndex) ;
+	}
+	offsetIndex++;
 }
 
 
@@ -587,31 +642,39 @@ void DX12RHI::IASetPrimitiveTopology()
 }
 
 
-void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth,bool isNeedRTV)
+void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth,bool isNeedRTV,int RTVNumber, int width, int height)
 {
+	SetGraphicsRoot32BitConstants(width,height);
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	//mCommandList->SetGraphicsRootDescriptorTable(0, mCbvSrvHeap[Name]->GetGPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
 	hDescriptor.Offset(renderItem->ObjCBIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	mCommandList->SetGraphicsRootDescriptorTable(0, hDescriptor);
+	mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor);
 	if (!isDepth) {
 		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor2(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
 		hDescriptor2.Offset(renderItem->ObjSrvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(1, hDescriptor2);
+		mCommandList->SetGraphicsRootDescriptorTable(2, hDescriptor2);
 	}
 	if (isNeedRTV) {
-		CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor3(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
-		hDescriptor3.Offset(renderItem->ObjRtvIndex, md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		mCommandList->SetGraphicsRootDescriptorTable(2, hDescriptor3);
+		for (int i = 0; i < RTVNumber; i++) {
+			int RTVNumber=0;
+			CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor3(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
+			hDescriptor3.Offset(renderItem->ObjRtvIndex[i], md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+			RTVNumber = i;
+			if (i > 2) {
+				RTVNumber = 1;
+			}
+			mCommandList->SetGraphicsRootDescriptorTable(RTVNumber +3, hDescriptor3);
 	}
-	SetGraphicsRoot32BitConstants();
+	}
+
 }
 
-void DX12RHI::SetGraphicsRoot32BitConstants()
+void DX12RHI::SetGraphicsRoot32BitConstants(int width, int height)
 {
-	mCommandList->SetGraphicsRoot32BitConstants(3, 3, &cameraLoc, 0);
-	int RenderTargetSize[2] = {Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight()};
-	mCommandList->SetGraphicsRoot32BitConstants(3, 2, &RenderTargetSize, 0);
+	float RenderTargetSize[4] = { Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight(),width,height };
+	mCommandList->SetGraphicsRoot32BitConstants(0, 4, &RenderTargetSize, 0);
+	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &cameraLoc, 4);
 }
 
 void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem,FMaterial Mat)
@@ -626,11 +689,11 @@ void DX12RHI::SetPipelineState(std::shared_ptr<RenderItem> renderItem,FMaterial 
 	currentPSOName = Mat.mPso.PSOName;
 }
 
-void DX12RHI::DrawIndexedInstanced(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name)
+void DX12RHI::DrawIndexedInstanced(std::shared_ptr<RenderItem> renderItem, const std::string& Name)
 {
-	mCommandList->DrawIndexedInstanced(sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].IndexCount, 1,
-		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].StartIndexLocation,
-		(UINT)sceneResource->mRenderItem[Name]->mGeo->DrawArgs[Name].BaseVertexLocation, 0);
+	mCommandList->DrawIndexedInstanced(renderItem->mGeo->DrawArgs[Name].IndexCount, 1,
+		(UINT)renderItem->mGeo->DrawArgs[Name].StartIndexLocation,
+		(UINT)renderItem->mGeo->DrawArgs[Name].BaseVertexLocation, 0);
 
 }
 
@@ -697,7 +760,7 @@ void DX12RHI::CreateRtvAndDsvDescriptorHeaps()
 	rtvHeapDesc.NodeMask = 0;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvHeapDesc.NumDescriptors = 3;
+	rtvHeapDesc.NumDescriptors = 100;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;

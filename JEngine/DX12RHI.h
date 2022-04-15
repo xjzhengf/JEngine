@@ -58,16 +58,16 @@ private:
 	void BulidDescriptorHeaps();
 	void BulidConstantBuffers(const std::string& Name, RenderItem* renderItem);
 	void BuildMaterial(const std::string& Name, FRenderResource* RenderResource);
-	void BuildShaderResourceView(const std::string& ActorName, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene);
+	void BuildShaderResourceView(const std::string& ActorName, RenderItem* renderItem, const std::string& Name, FRenderResource* RenderResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> renderScene);
 	void BulidRootSignature(FShader* shader);
 	void BuildPSO(std::shared_ptr<RenderItem> renderItem, FMaterial Mat) override;
 
 public:
 	void IASetVertexAndIndexBuffers(Buffer* buffer);
 	void IASetPrimitiveTopology();
-	void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth, bool isNeedRTV);
-	void DrawIndexedInstanced(std::shared_ptr<FRenderScene> renderResource, const std::string& Name);
-	void SetGraphicsRoot32BitConstants();
+	void SetGraphicsRootDescriptorTable(RenderItem* renderItem, bool isDepth, bool isNeedRTV, int RTVNumber,int width,int height);
+	void DrawIndexedInstanced(std::shared_ptr<RenderItem> renderItem, const std::string& Name);
+	void SetGraphicsRoot32BitConstants(int width, int height);
 	void ClearRenderTargetView(unsigned __int64 ptr);
 	void ClearDepthStencilView(unsigned __int64 ptr);
 	void OMSetStencilRef(int StencilRef);
@@ -78,7 +78,7 @@ public:
 	void BuildRenderItem(std::shared_ptr<FRenderScene> sceneResource, const std::string& MatName);
 public:
 	//override RHI
-	virtual void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, const std::string& Name, int CBIndex, FMaterial Mat) override;
+	virtual void UpdateCB(std::shared_ptr<FRenderScene> sceneResource, RenderItem* renderItem, const std::string& Name, int CBIndex, FMaterial Mat) override;
 	virtual void RSSetViewports(float TopLeftX, float TopLeftY, float Width, float Height, float MinDepth, float MaxDepth) override;
 	virtual void ResetCommand(const std::string& PSOName) override;
 	virtual void RSSetScissorRects(long left, long top, long right, long bottom) override;
@@ -90,13 +90,13 @@ public:
 
 
 	virtual void RenderFrameBegin(std::shared_ptr<FRenderScene> renderResource, const std::string& MatName) override;
-	virtual void DrawMesh(std::shared_ptr<FRenderScene> renderResource, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV) override;
+	virtual void DrawMesh(std::shared_ptr<RenderItem> renderItem, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV, int RTVNumber, int width , int height ) override;
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
 		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;
 public:
-	virtual Buffer* CreateBuffer(std::shared_ptr<FRenderScene> renderResource, const std::string& Name) override;
+	virtual Buffer* CreateBuffer(std::shared_ptr<RenderItem> renderItem, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
-	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, ActorStruct* Actor, FRenderResource* shadowResource,  FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) override;
+	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, const std::string& MeshName, RenderItem* renderItem, FRenderResource* shadowResource,  FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) override;
 protected:
 	HWND mhMainWnd = nullptr;
 

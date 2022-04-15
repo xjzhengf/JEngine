@@ -13,4 +13,6 @@ public:
 	glm::mat4x4 LightViewProj;
 	glm::mat4x4 TLightViewProj;
 	glm::vec3 LightDirection;
+	std::unique_ptr<MeshData> HDRGeo;
+	std::shared_ptr<RenderItem> HDRTriangle;
 };

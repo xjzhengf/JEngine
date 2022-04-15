@@ -224,12 +224,23 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\RenderHead.hlsli" />
     <None Include="Shaders\Shadow.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\HightLight.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\BloomDown.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\BloomUp.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

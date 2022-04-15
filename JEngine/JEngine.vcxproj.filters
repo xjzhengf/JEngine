@@ -268,5 +268,14 @@
     <None Include="Shaders\HightLight.hlsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Shaders\RenderHead.hlsli">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\BloomDown.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\BloomUp.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

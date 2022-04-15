@@ -11,7 +11,7 @@ public:
 	void RenderInit();
 	void SceneRender();
 	void DepthPass();
-	void BasePass();
+	void BloomPass(int index, const std::string& PSOName);
 	void HDRPass();
 	void BuildLight(std::shared_ptr<FRenderScene> sceneResource);
 	void BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource);

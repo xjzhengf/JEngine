@@ -17,7 +17,7 @@ public:
 	UINT ObjCBIndex = -1;
 	UINT MaterialCBIndex = -1;
 	UINT ObjSrvIndex = -1;
-	UINT ObjRtvIndex = -1;
+	std::vector<UINT> ObjRtvIndex ;
 	//FMaterial Mat;
 	std::string MatName;
 	std::unique_ptr<DXBuffer> mGeo = nullptr;
