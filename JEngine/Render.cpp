@@ -156,7 +156,7 @@ void FRender::ToneMapPass()
 
 	mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").GlobalShader);
 	mRHI->SetPipelineState(mRenderScene->HDRTriangle, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"));
-	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, 5, 1024, 768);
+	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, 6, 1024, 768);
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
 }
 
