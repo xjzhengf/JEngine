@@ -38,7 +38,7 @@ public:
 	);
 
 
-	int HDRSize = 5;
+	int HDRSize = 7;
 private:
 	void BuildDescriptors(int index);
 	void BuildResource(int width, int height, int index);

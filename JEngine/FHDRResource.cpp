@@ -152,7 +152,7 @@ void DXHDRResource::BuildResource(int width, int height,int index)
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		&shadowTexDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COMMON,
 		&shadowOptClear,
 		IID_PPV_ARGS(&mShadow)
 	));

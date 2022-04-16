@@ -41,9 +41,6 @@ void FRender::RenderInit()
 
 	mRHI->RenderFrameBegin(mRenderScene, "ShadowMap");
 	
-	mRHI->CreateShader(L"..\\JEngine\\Shaders\\HightLight.hlsl");
-	mRHI->CreateShader( L"..\\JEngine\\Shaders\\color.hlsl");
-	mRHI->CreateShader( L"..\\JEngine\\Shaders\\Shadow.hlsl");
 	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
@@ -78,10 +75,11 @@ void FRender::SceneRender()
 	DepthPass();
 	HDRPass();
 	BloomPass(1,"BloomSet");
-
-   BloomPass(2, "BloomDown");
-   BloomPass(3, "BloomUp");
-   BloomPass(4, "BloomUp");
+    BloomPass(2, "BloomDown");
+    BloomPass(3, "BloomDown");
+    BloomPass(4, "BloomUp");
+    BloomPass(5, "SunMerge");
+	ToneMapPass();
 
 	//RenderFrameEnd
 	mRHI->ExecuteCommandLists();
@@ -109,7 +107,7 @@ void FRender::BloomPass(int index,const std::string& PSOName)
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(index), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
+	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(index), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(index), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
 	//ClearAndSetRenderTatget
 
@@ -123,15 +121,15 @@ void FRender::BloomPass(int index,const std::string& PSOName)
 	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, index,std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->width[index], std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->height[index]);
 	
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(index), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(index), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(index), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
 
 void FRender::HDRPass()
 {
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::DEPTH_WRITE);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(0), std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(0),
 		1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(0), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(0));
@@ -142,7 +140,24 @@ void FRender::HDRPass()
 		mRHI->DrawMesh(RenderItem.second, RenderItem.first, false,false, 0,1024,768);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::COMMON);
+}
+
+void FRender::ToneMapPass()
+{
+	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
+	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
+
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::PRESENT, RESOURCE_STATES::RENDER_TARGET);
+	//ClearAndSetRenderTatget
+	mRHI->ClearAndSetRenderTatget(mRHIResource->CurrentBackBufferViewHand(), mRHIResource->CurrentDepthStencilViewHand(),
+		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
+	//DrawMesh
+
+	mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").GlobalShader);
+	mRHI->SetPipelineState(mRenderScene->HDRTriangle, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"));
+	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, 5, 1024, 768);
+	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
 }
 
 
@@ -153,10 +168,10 @@ void FRender::BuildLight(std::shared_ptr<FRenderScene> sceneResource)
 	glm::vec3 direction = SceneManager::GetSceneManager()->DirectionalLight.Direction;
 	glm::vec3 lightPos = -2.0f * Radius * SceneManager::GetSceneManager()->DirectionalLight.Direction;
 	float Time =Engine::GetEngine()->Time/3;
-	//direction.x = direction.x * glm::cos(Time) - direction.y * glm::sin(Time);
-	//direction.y = direction.y * glm::cos(Time) + direction.x * glm::sin(Time);
-	//lightPos.x = lightPos.x * glm::cos(Time) - lightPos.y * glm::sin(Time);
-	//lightPos.y = lightPos.y * glm::cos(Time) + lightPos.x * glm::sin(Time);
+	direction.x = direction.x * glm::cos(Time) - direction.y * glm::sin(Time);
+	direction.y = direction.y * glm::cos(Time) + direction.x * glm::sin(Time);
+	lightPos.x = lightPos.x * glm::cos(Time) - lightPos.y * glm::sin(Time);
+	lightPos.y = lightPos.y * glm::cos(Time) + lightPos.x * glm::sin(Time);
 	sceneResource->LightDirection = direction;
 	glm::mat4x4 lightView = glm::lookAtLH(lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::vec3 sphereCenterLS = MathHelper::Vector3TransformCoord(glm::vec3(0.0f, 0.0f, 0.0f), lightView);

@@ -60,23 +60,23 @@ float4 PS(VertexOut pin) : SV_Target
 	float2 DeltaUV = float2(DeltaU, DeltaV);
 
 	float Start = 2.0 / 7.0;
-	float4 Color0 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 0.0f));
-	float4 Color1 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 1.0f));
-	float4 Color2 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 2.0f));
-	float4 Color3 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 3.0f));
-	float4 Color4 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 4.0f));
-	float4 Color5 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 5.0f));
-	float4 Color6 = gBloomUp.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 6.0f));
-	float4 Color7 = gBloomUp.Sample(gBloomInputSampler, Tex);
+	float4 Color0 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 0.0f));
+	float4 Color1 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 1.0f));
+	float4 Color2 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 2.0f));
+	float4 Color3 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 3.0f));
+	float4 Color4 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 4.0f));
+	float4 Color5 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 5.0f));
+	float4 Color6 = gBloomDown.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 6.0f));
+	float4 Color7 = gBloomDown.Sample(gBloomInputSampler, Tex);
 
-	float4 Color8 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 0.0f));
-	float4 Color9 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 1.0f));
-	float4 Color10 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 2.0f));
-	float4 Color11 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 3.0f));
-	float4 Color12 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 4.0f));
-	float4 Color13 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 5.0f));
-	float4 Color14 = gBloomMap2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 6.0f));
-	float4 Color15 = gBloomMap2.Sample(gBloomInputSampler, Tex);
+	float4 Color8 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 0.0f));
+	float4 Color9 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 1.0f));
+	float4 Color10 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 2.0f));
+	float4 Color11 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 3.0f));
+	float4 Color12 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 4.0f));
+	float4 Color13 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 5.0f));
+	float4 Color14 = gBloomDown2.Sample(gBloomInputSampler, Tex + DeltaUV * BloomUpScale * Circle(Start, 7.0, 6.0f));
+	float4 Color15 = gBloomDown2.Sample(gBloomInputSampler, Tex);
 
 	float4 BloomWight = float4(BloomWeightScalar, BloomWeightScalar, BloomWeightScalar, 0.0f);
 	float4 BloomWight1 = float4(BloomWeightScalar1, BloomWeightScalar1, BloomWeightScalar1, 0.0f);

@@ -277,5 +277,11 @@
     <None Include="Shaders\BloomUp.hlsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Shaders\SunMerge.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\ToneMap.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

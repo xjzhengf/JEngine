@@ -32,7 +32,7 @@ protected:
 	PipelineState BuildDepthFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader);
 	PipelineState BuildBloomFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader);
 	PipelineState BuildBloomSetFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader);
-	PipelineState BuildBloomUpFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader);
+	PipelineState BuildBloomUpFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader, const std::string& PSOType);
 	PipelineState BuildBloomDownFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader);
 	PipelineState mPso;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> dxInputLayout;

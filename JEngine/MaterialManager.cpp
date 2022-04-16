@@ -60,6 +60,21 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		mMaterialMap["BloomUp"] = material;
 		return mMaterialMap["BloomUp"];
 	}
+	if (MaterialName == "SunMerge") {
+		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
+		mInputLayout =
+		{
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"UV", 0, FORMAT_R32G32_FLOAT, 0, 24, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+
+		};
+		material.Name = "SunMerge";
+		material.GlobalShader = L"..\\JEngine\\Shaders\\SunMerge.hlsl";
+		material.mPso = pso->CreateFPSO("SunMerge", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\SunMerge.hlsl"));
+		mMaterialMap["SunMerge"] = material;
+		return mMaterialMap["SunMerge"];
+	}
 	if (MaterialName == "ShadowMap") {
 
 		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
@@ -90,6 +105,24 @@ const FMaterial& MaterialManager::SearchMaterial(const std::string& MaterialName
 		mMaterialMap["Bloom"] = material;
 
 		return mMaterialMap["Bloom"];
+	}
+	if (MaterialName == "ToneMap")
+	{
+		std::vector<INPUT_ELEMENT_DESC> mInputLayout;
+		mInputLayout =
+		{
+			{ "POSITION", 0, FORMAT_R32G32B32_FLOAT, 0, 0, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{"TEXCOORD", 0, FORMAT_R32G32_FLOAT, 0, 12, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"UV", 0, FORMAT_R32G32_FLOAT, 0, 24, INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+
+		};
+		material.GlobalShader = L"..\\JEngine\\Shaders\\ToneMap.hlsl";
+		material.Name = "ToneMap";
+		material.mMaterialConstants.DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+		material.mMaterialConstants.FresnelR0 = { 0.5f, 0.5f, 0.5f };
+		material.mMaterialConstants.Roughness = 0.01f;
+		material.mPso = pso->CreateFPSO("ToneMap", std::move(mInputLayout), ShaderManager::GetShaderManager()->CompileShader(L"..\\JEngine\\Shaders\\ToneMap.hlsl"));
+		mMaterialMap["ToneMap"] = material;
 	}
 	return mMaterialMap["Default"];
 }

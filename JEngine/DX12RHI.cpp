@@ -448,14 +448,14 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName,RenderItem* r
 	for (int i=0;i<dynamic_cast<DXHDRResource*>(HDRResource)->HDRSize;i++)
 	{
 		float scale= 1.0f;
-		if (i == 1) {
-			scale = 0.25;
+		if (i >= 1) {
+			scale = 0.25 * glm::pow(0.5, glm::min(i - 1,3));
 		}
-		if (i == 2) {
-			scale = 0.25*0.5;
+		if (i >= 4) {
+			scale = scale * glm::pow(2,i-2);
 		}
-		if (i >= 3) {
-			scale = 0.25 *(i - 2) ;
+		if (scale > 1) {
+			scale = 1;
 		}
 	  dynamic_cast<DXHDRResource*>(HDRResource)->BuildDescriptors(
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(srvCpuStart, ++offsetIndex, mCbvSrvUavDescriptorSize),
@@ -570,7 +570,8 @@ void DX12RHI::RSSetScissorRects(long left, long top, long right, long bottom)
 
 void DX12RHI::ResourceBarrier(unsigned int NumberBarrier, std::shared_ptr<FResource> Resource, int stateBefore , int stateAfter)
 {
-	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(Resource->Resource, D3D12_RESOURCE_STATES(stateBefore), D3D12_RESOURCE_STATES(stateAfter)));
+    auto afterState = D3D12_RESOURCE_STATES(stateAfter);
+	mCommandList->ResourceBarrier(NumberBarrier, &CD3DX12_RESOURCE_BARRIER::Transition(Resource->Resource, D3D12_RESOURCE_STATES(stateBefore), afterState));
 }
 
 void DX12RHI::ClearRenderTargetView(unsigned __int64 ptr)
@@ -656,15 +657,26 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 		mCommandList->SetGraphicsRootDescriptorTable(2, hDescriptor2);
 	}
 	if (isNeedRTV) {
+	   
 		for (int i = 0; i < RTVNumber; i++) {
-			int RTVNumber=0;
+			int currentRTVNumber=0;
 			CD3DX12_GPU_DESCRIPTOR_HANDLE hDescriptor3(mCbvSrvHeaps->GetGPUDescriptorHandleForHeapStart());
 			hDescriptor3.Offset(renderItem->ObjRtvIndex[i], md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-			RTVNumber = i;
-			if (i > 2) {
-				RTVNumber = 1;
+			currentRTVNumber = i;
+		    if (i < 4) {
+				currentRTVNumber = glm::min(RTVNumber,4) - i;
+				if (RTVNumber > 4&& i!= 3) {
+					currentRTVNumber--;
+				}
+
 			}
-			mCommandList->SetGraphicsRootDescriptorTable(RTVNumber +3, hDescriptor3);
+			else if (i >= 4) {
+				currentRTVNumber = 1;
+			}
+		    if (i == 0) {
+				currentRTVNumber = 0;
+		    }
+			mCommandList->SetGraphicsRootDescriptorTable(currentRTVNumber + 3, hDescriptor3);
 	}
 	}
 

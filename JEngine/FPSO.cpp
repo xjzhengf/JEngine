@@ -9,7 +9,7 @@ const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<IN
 	if (mPsoMap.find(PSOType)!=mPsoMap.end()) {
 		return mPsoMap[PSOType];
 	}
-	if (PSOType == "Scene") {
+	if (PSOType == "ToneMap") {
 		mPsoMap[PSOType]= BuildRenderFPSO(mInputLayout, shader);
 	}
 	if (PSOType == "ShadowMap") {
@@ -24,8 +24,8 @@ const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<IN
 	if (PSOType == "BloomDown") {
 		mPsoMap[PSOType] = BuildBloomDownFPSO(mInputLayout, shader);
 	}	
-	if (PSOType == "BloomUp") {
-		mPsoMap[PSOType] = BuildBloomUpFPSO(mInputLayout, shader);
+	if (PSOType == "BloomUp" || PSOType == "SunMerge") {
+		mPsoMap[PSOType] = BuildBloomUpFPSO(mInputLayout, shader, PSOType);
 	}
 	return mPsoMap[PSOType];
 }
@@ -68,7 +68,7 @@ PipelineState FPSO::BuildRenderFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	mPso.PSOName = "Scene";
+	mPso.PSOName = "ToneMap";
 	mPso.dxPSO =psoDesc;
 	return mPso;
 #endif
@@ -212,7 +212,7 @@ PipelineState FPSO::BuildBloomSetFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayo
 	return PipelineState();
 }
 
-PipelineState FPSO::BuildBloomUpFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader)
+PipelineState FPSO::BuildBloomUpFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout, FShader* shader, const std::string& PSOType)
 {
 
 #ifdef _WIN32
@@ -250,7 +250,7 @@ PipelineState FPSO::BuildBloomUpFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayou
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
-	mPso.PSOName = "BloomUp";
+	mPso.PSOName = PSOType;
 	mPso.dxPSO = psoDesc;
 	return mPso;
 #endif
