@@ -44,6 +44,7 @@
 #include "MeshProperty.h"
 #include "D3DUtil.h"
 #include "RenderItem.h"
+#include <pix.h>
 #define _CRTDBG_MAP_ALLOC
 
 #define USE_BLOOMDOWN  0;

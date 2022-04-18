@@ -32,6 +32,8 @@ public:
 	virtual void DrawMesh(std::shared_ptr<RenderItem> renderItem, const std::string& renderItemName, bool IsDrawDepth, bool isNeedRTV, int RTVNumber, int width , int height ) = 0;
 
 public:
+    virtual void BeginEvent(const std::string EventName) = 0;
+    virtual void EndEvent() = 0;
 	virtual Buffer* CreateBuffer(std::shared_ptr<RenderItem> renderItem, const std::string& Name) = 0;
 	virtual void CreateShader( const std::wstring& filename)=0;
 	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, const std::string& MeshName, RenderItem* renderItem, FRenderResource* shadowResource, FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) {};

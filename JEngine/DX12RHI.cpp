@@ -321,6 +321,16 @@ void DX12RHI::ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, un
 
 
 
+void DX12RHI::BeginEvent(const std::string EventName)
+{
+    PIXBeginEvent(mCommandList.Get(),0,EventName.c_str());
+}
+
+void DX12RHI::EndEvent()
+{
+PIXEndEvent(mCommandList.Get());
+}
+
 Buffer* DX12RHI::CreateBuffer(std::shared_ptr<RenderItem> renderItem,const std::string& Name)
 {
 	return renderItem->mGeo.get();

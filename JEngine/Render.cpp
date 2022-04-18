@@ -76,15 +76,16 @@ void FRender::SceneRender()
 	}
 	mRHI->UpdateCB(mRenderScene, mRenderScene->HDRTriangle.get(), "HDRTriangle", CBIndex, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 	//SetViewportAndScissorRect
+
 	DepthPass();
+
 	HDRPass();
+
 	int postProcessCount = 1;
 	if (mUseBloomDown) {
 	BloomPass(postProcessCount);
 	}
 	PostProcessPass(postProcessCount, "Glitch");
-	
-
 	ToneMapPass(postProcessCount);
 
 	//RenderFrameEnd
@@ -101,6 +102,7 @@ void FRender::BloomPass(int& postProcessCount)
 
 void FRender::DepthPass()
 {
+	mRHI->BeginEvent("DepthPass");
 	mRHI->RSSetViewports(0.0f, 0.0f, 2048, 2048, 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, 2048, 2048);
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ, RESOURCE_STATES::DEPTH_WRITE);
@@ -114,10 +116,12 @@ void FRender::DepthPass()
 		mRHI->DrawMesh(RenderItem.second, RenderItem.first, true,false,0, 1024, 768);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FShadowResource>(mShadowResource)->GetResource(), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
+	mRHI->EndEvent();
 }
 
 void FRender::PostProcessPass(int& index,const std::string& PSOName)
 {
+	mRHI->BeginEvent(PSOName);
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 
@@ -136,11 +140,13 @@ void FRender::PostProcessPass(int& index,const std::string& PSOName)
 	
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(index), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
 	index++;
+	mRHI->EndEvent();
 	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(index), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::RESOURCE_STATE_GENERIC_READ);
 }
 
 void FRender::HDRPass()
 {
+	mRHI->BeginEvent("HDRPass");
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
@@ -155,12 +161,14 @@ void FRender::HDRPass()
 		mRHI->DrawMesh(RenderItem.second, RenderItem.first, false,false, 0,1024,768);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
+	mRHI->EndEvent();
 	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::COMMON);
 }
 
 
 void FRender::ToneMapPass(int RTVNumber)
 {
+	mRHI->BeginEvent("ToneMapPass");
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 
@@ -174,6 +182,7 @@ void FRender::ToneMapPass(int RTVNumber)
 	mRHI->SetPipelineState(mRenderScene->HDRTriangle, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"));
 	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, RTVNumber, 1024, 768);
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
+	mRHI->EndEvent();
 }
 
 

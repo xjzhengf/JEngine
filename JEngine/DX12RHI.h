@@ -94,6 +94,8 @@ public:
 	virtual void ClearAndSetRenderTatget(unsigned __int64 ClearRenderTargetHand, unsigned __int64 ClearDepthStencilHand, int numTatgetDescriptors, unsigned __int64 SetRenderTargetHand,
 		bool RTsSingleHandleToDescriptorRange, unsigned __int64 SetDepthStencilHand) override;
 public:
+	virtual void BeginEvent(const std::string EventName);
+	virtual void EndEvent();
 	virtual Buffer* CreateBuffer(std::shared_ptr<RenderItem> renderItem, const std::string& Name) override;
 	virtual void CreateShader( const std::wstring& filename) override;
 	virtual void CreateCbHeapsAndSrv(const std::string& ActorName, const std::string& MeshName, RenderItem* renderItem, FRenderResource* shadowResource,  FRenderResource* HDRResource, std::shared_ptr<FRenderScene> sceneResource) override;
