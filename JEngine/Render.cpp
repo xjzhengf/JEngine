@@ -129,10 +129,10 @@ void FRender::HDRPass()
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::RENDER_TARGET);
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::DEPTH_WRITE);
+	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::COMMON, RESOURCE_STATES::DEPTH_WRITE);
 	//SetRenderTatget
 	mRHI->ClearAndSetRenderTatget(std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(0), std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(0),
-		1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(0), true, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(0));
+		1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->RTV(0), false, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->DSV(0));
 	for (auto&& RenderItem : mRenderScene->mRenderItem)
 	{
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(RenderItem.second->MatName), MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("Bloom").GlobalShader);
@@ -140,7 +140,7 @@ void FRender::HDRPass()
 		mRHI->DrawMesh(RenderItem.second, RenderItem.first, false,false, 0,1024,768);
 	}
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
-	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::COMMON);
+	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::COMMON);
 }
 
 void FRender::ToneMapPass()
