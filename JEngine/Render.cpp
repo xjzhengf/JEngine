@@ -84,7 +84,7 @@ void FRender::SceneRender()
 	PostProcessPass(postProcessCount, "BloomUp");
 	PostProcessPass(postProcessCount, "SunMerge");
 
-    PostProcessPass(postProcessCount, "Glitch");
+    //PostProcessPass(postProcessCount, "Glitch");
 	ToneMapPass(postProcessCount);
 
 	//RenderFrameEnd
