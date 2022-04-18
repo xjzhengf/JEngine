@@ -51,3 +51,33 @@ SamplerState gBloomInputSampler      : register(s3);
 float4 RenderTargetSize : register(b0);
 float3 CameraLoc : register(b1);
 
+struct Light {
+	float Strength;
+	float3 Direction;
+	float4 Location;
+};
+struct Material {
+	float4 DiffuseAlbedo;
+	float3 FresnelR0;
+	float Roughness;
+	float Shininess;
+};
+
+cbuffer cbPerObject : register(b2)
+{
+	float4x4 tLightViewProj;
+	float4x4 gLightViewProj;
+	float4x4 gViewProj;
+	float4x4 gWorld;
+	float4x4 gRotation;
+	float4x4 TexTransform;
+	float Time;
+	Light light;
+};
+cbuffer materialConstants : register(b3)
+{
+	float4 DiffuseAlbedo;
+	float3 FresnelR0;
+	float Roughness;
+	float4x4 MatTransform;
+};
