@@ -48,7 +48,7 @@ SamplerState gBloomInputSampler      : register(s3);
 //SamplerState gsamAnisotropicClamp : register(s5);
 
 
-float4 RenderTargetSize : register(b0);
+int4 RenderTargetSize : register(b0);
 float3 CameraLoc : register(b1);
 
 struct Light {

@@ -46,5 +46,6 @@
 #include "RenderItem.h"
 #define _CRTDBG_MAP_ALLOC
 
+#define USE_BLOOMDOWN  0;
 using namespace DirectX;
 using CallBackInString = std::function<void(std::string)>;

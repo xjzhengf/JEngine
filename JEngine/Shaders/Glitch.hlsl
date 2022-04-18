@@ -94,10 +94,9 @@ float4 PS(VertexOut pin) : SV_Target
 	splitAmout *= 1.0 + sin(Time * 27.0) * 0.5;
 	splitAmout = pow(splitAmout, 5);
 	splitAmout *= (0.05 *1 );
-	half3 finalColor;
-
-	finalColor.g = gBloomMap.Sample(gBloomInputSampler, float2(Tex.x + splitAmout, Tex.y)).g;
-	finalColor.r= gBloomMap.Sample(gBloomInputSampler, Tex).r;
+	float3 finalColor;
+	finalColor.r = gBloomMap.Sample(gBloomInputSampler, float2(Tex.x + splitAmout, Tex.y)).r;
+	finalColor.g= gBloomMap.Sample(gBloomInputSampler, Tex).g;
 	finalColor.b = gBloomMap.Sample(gBloomInputSampler, float2(Tex.x - splitAmout, Tex.y)).b;
 	finalColor *= (1.0 - splitAmout * 0.5);
 

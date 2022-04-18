@@ -448,11 +448,13 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName,RenderItem* r
 	for (int i=0;i<dynamic_cast<DXHDRResource*>(HDRResource)->HDRSize;i++)
 	{
 		float scale= 1.0f;
-		if (i >= 1) {
-			scale = 0.25 * glm::pow(0.5, glm::min(i - 1,3));
+		
+		if (i >= 1 && dynamic_cast<DXHDRResource*>(HDRResource)->mUseBloomDown) {
+		scale = 0.25 * static_cast<float>(glm::pow(0.5, glm::min(i - 1, 3)));
 		}
+
 		if (i >= 4) {
-			scale = scale * glm::pow(2,i-2);
+			scale = scale * static_cast<float>(glm::pow(2,i-2));
 		}
 		if (scale > 0.25) {
 			scale = 1;
@@ -462,7 +464,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName,RenderItem* r
 		  CD3DX12_GPU_DESCRIPTOR_HANDLE(srvGpuStart, offsetIndex, mCbvSrvUavDescriptorSize),
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvCpuStart, 2, mDsvDescriptorSize),
 		  CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvCpuStart, i+2, mRtvDescriptorSize),
-		  i,1024* scale,768* scale);
+		  i, static_cast<int>(1024* scale), static_cast<int>(768* scale));
 
 	 renderItem->ObjRtvIndex.push_back(offsetIndex) ;
 	}
@@ -683,7 +685,7 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 
 void DX12RHI::SetGraphicsRoot32BitConstants(int width, int height)
 {
-	float RenderTargetSize[4] = { Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight(),width,height };
+	int RenderTargetSize[4] = { Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight(),width,height };
 	mCommandList->SetGraphicsRoot32BitConstants(0, 4, &RenderTargetSize, 0);
 	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &cameraLoc, 4);
 }

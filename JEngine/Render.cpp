@@ -46,12 +46,14 @@ void FRender::RenderInit()
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 	}
-
+	//ÊÇ·ñ¿ªÆôBloomDown
+	std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->mUseBloomDown = true;
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
 		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second->StaticMeshAssetName[0], mRenderScene->mRenderItem[actorPair.first].get(), mShadowResource.get(),mHDRResource.get(), mRenderScene);
 	}
 	mRHI->CreateCbHeapsAndSrv("HDRTriangle","HDRTriangle", mRenderScene->HDRTriangle.get(), mShadowResource.get(), mHDRResource.get(), mRenderScene);
+
 	mRHI->ExecuteCommandLists();
 	mRHI->IsRunDrawPrepare = false;
 } 
@@ -75,11 +77,13 @@ void FRender::SceneRender()
 	DepthPass();
 	HDRPass();
 	int postProcessCount = 1;
-	PostProcessPass(postProcessCount,"BloomSet");
-    PostProcessPass(postProcessCount, "BloomDown");
-    PostProcessPass(postProcessCount, "BloomDown");
-    PostProcessPass(postProcessCount, "BloomUp");
-    PostProcessPass(postProcessCount, "SunMerge");
+
+	PostProcessPass(postProcessCount, "BloomSet");
+	PostProcessPass(postProcessCount, "BloomDown");
+	PostProcessPass(postProcessCount, "BloomDown");
+	PostProcessPass(postProcessCount, "BloomUp");
+	PostProcessPass(postProcessCount, "SunMerge");
+
     PostProcessPass(postProcessCount, "Glitch");
 	ToneMapPass(postProcessCount);
 
