@@ -46,8 +46,10 @@ void FRender::RenderInit()
 		mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap").GlobalShader);
 		mRHI->SetPipelineState(RenderItem.second,MaterialManager::GetMaterialManager()->SearchMaterial("ShadowMap"));
 	}
+
 	//ÊÇ·ñ¿ªÆôBloomDown
 	std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->mUseBloomDown = true;
+
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
 		mRHI->CreateCbHeapsAndSrv(actorPair.first, actorPair.second->StaticMeshAssetName[0], mRenderScene->mRenderItem[actorPair.first].get(), mShadowResource.get(),mHDRResource.get(), mRenderScene);
@@ -78,16 +80,20 @@ void FRender::SceneRender()
 	HDRPass();
 	int postProcessCount = 1;
 
-	PostProcessPass(postProcessCount, "BloomSet");
-	PostProcessPass(postProcessCount, "BloomDown");
-	PostProcessPass(postProcessCount, "BloomDown");
-	PostProcessPass(postProcessCount, "BloomUp");
-	PostProcessPass(postProcessCount, "SunMerge");
+	BloomPass(postProcessCount);
 	PostProcessPass(postProcessCount, "Glitch");
 	ToneMapPass(postProcessCount);
 
 	//RenderFrameEnd
 	mRHI->ExecuteCommandLists();
+}
+void FRender::BloomPass(int& postProcessCount)
+{
+    PostProcessPass(postProcessCount, "BloomSet");
+	PostProcessPass(postProcessCount, "BloomDown");
+	PostProcessPass(postProcessCount, "BloomDown");
+	PostProcessPass(postProcessCount, "BloomUp");
+	PostProcessPass(postProcessCount, "SunMerge");
 }
 
 void FRender::DepthPass()
@@ -148,6 +154,7 @@ void FRender::HDRPass()
 	mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetRTVResource(0), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::COMMON);
 	//mRHI->ResourceBarrier(1, std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->GetDSVResource(0), RESOURCE_STATES::DEPTH_WRITE, RESOURCE_STATES::COMMON);
 }
+
 
 void FRender::ToneMapPass(int RTVNumber)
 {

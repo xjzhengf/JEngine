@@ -13,6 +13,7 @@ public:
 	void DepthPass();
 	void PostProcessPass(int& index, const std::string& PSOName);
 	void HDRPass();
+	void BloomPass(int& postProcessCount);
 	void ToneMapPass(int RTVNumber);
 	void BuildLight(std::shared_ptr<FRenderScene> sceneResource);
 	void BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource);
