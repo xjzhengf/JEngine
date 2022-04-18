@@ -24,7 +24,7 @@ const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<IN
 	if (PSOType == "BloomDown") {
 		mPsoMap[PSOType] = BuildBloomDownFPSO(mInputLayout, shader);
 	}	
-	if (PSOType == "BloomUp" || PSOType == "SunMerge") {
+	if (PSOType == "BloomUp" || PSOType == "SunMerge" || PSOType=="Glitch") {
 		mPsoMap[PSOType] = BuildBloomUpFPSO(mInputLayout, shader, PSOType);
 	}
 	return mPsoMap[PSOType];

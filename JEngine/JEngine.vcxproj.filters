@@ -283,5 +283,8 @@
     <None Include="Shaders\ToneMap.hlsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Shaders\Glitch.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

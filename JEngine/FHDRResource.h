@@ -9,7 +9,7 @@ public:
 	virtual unsigned __int64 SRV(int index) = 0;
 	virtual unsigned __int64 DSV(int index) = 0;
 	virtual unsigned __int64 RTV(int index) = 0;
-
+	int HDRSize = 7;
 	std::vector<int> width;
 	std::vector<int> height;
 };
@@ -37,8 +37,6 @@ public:
 		int height
 	);
 
-
-	int HDRSize = 7;
 private:
 	void BuildDescriptors(int index);
 	void BuildResource(int width, int height, int index);

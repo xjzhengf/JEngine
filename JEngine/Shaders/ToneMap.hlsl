@@ -55,22 +55,10 @@ float4 PS(VertexOut pin) : SV_Target
 	Tex.x = 1.0f * X / RenderTargetSize[0];
 	Tex.y = 1.0f * Y / RenderTargetSize[1];
 
-	float splitAmout = (1.0 + sin(Time * 6.0)) * 0.5;
-	splitAmout *= 1.0 + sin(Time * 16.0) * 0.5;
-	splitAmout *= 1.0 + sin(Time * 19.0) * 0.5;
-	splitAmout *= 1.0 + sin(Time * 27.0) * 0.5;
-	splitAmout = pow(splitAmout, 5);
-	splitAmout *= (0.05 *1 );
-	half3 finalColor;
-
-	finalColor.g = gBloomMap.Sample(gBloomInputSampler, float2(Tex.x + splitAmout, Tex.y)).g;
-	finalColor.r= gBloomMap.Sample(gBloomInputSampler, Tex).r;
-	finalColor.b = gBloomMap.Sample(gBloomInputSampler, float2(Tex.x - splitAmout, Tex.y)).b;
-	finalColor *= (1.0 - splitAmout * 0.5);
-
+	float4 SceneColor= gBloomMap.Sample(gBloomInputSampler, Tex);
 	float4 BloomColor = gBloomDown.Sample(gBloomInputSampler, Tex);
 
-	half3 LinearColor = finalColor.rgb + BloomColor.rgb;
+	half3 LinearColor = SceneColor.rgb + BloomColor.rgb;
 	
 	float4 OutColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	OutColor.rgb = ACESToneMapping(LinearColor, 1.0f);

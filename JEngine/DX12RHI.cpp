@@ -454,7 +454,7 @@ void DX12RHI::BuildShaderResourceView(const std::string& ActorName,RenderItem* r
 		if (i >= 4) {
 			scale = scale * glm::pow(2,i-2);
 		}
-		if (scale > 1) {
+		if (scale > 0.25) {
 			scale = 1;
 		}
 	  dynamic_cast<DXHDRResource*>(HDRResource)->BuildDescriptors(
@@ -668,7 +668,6 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 				if (RTVNumber > 4&& i!= 3) {
 					currentRTVNumber--;
 				}
-
 			}
 			else if (i >= 4) {
 				currentRTVNumber = 1;
