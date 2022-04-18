@@ -674,7 +674,7 @@ void DX12RHI::SetGraphicsRootDescriptorTable(RenderItem* renderItem,bool isDepth
 			else if (i >= 4) {
 				currentRTVNumber = 1;
 			}
-		    if (i == 0) {
+		    if (i == 0|| i > 5) {
 				currentRTVNumber = 0;
 		    }
 			mCommandList->SetGraphicsRootDescriptorTable(currentRTVNumber + 3, hDescriptor3);
