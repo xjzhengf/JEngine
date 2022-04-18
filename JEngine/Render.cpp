@@ -48,7 +48,7 @@ void FRender::RenderInit()
 	}
 
 	//ÊÇ·ñ¿ªÆôBloomDown
-	std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->mUseBloomDown = true;
+	std::dynamic_pointer_cast<FHDRResource>(mHDRResource)->mUseBloomDown = mUseBloomDown;
 
 	for (auto&& actorPair : SceneManager::GetSceneManager()->GetAllActor())                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	{
@@ -79,9 +79,12 @@ void FRender::SceneRender()
 	DepthPass();
 	HDRPass();
 	int postProcessCount = 1;
-
+	if (mUseBloomDown) {
 	BloomPass(postProcessCount);
+	}
 	PostProcessPass(postProcessCount, "Glitch");
+	
+
 	ToneMapPass(postProcessCount);
 
 	//RenderFrameEnd

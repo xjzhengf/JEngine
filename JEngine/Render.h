@@ -26,4 +26,5 @@ private:
 	std::shared_ptr<FRenderResource> mShadowResource = nullptr;
 	std::shared_ptr<FRenderResource> mHDRResource = nullptr;
 	std::unique_ptr<FRHIFactory> RHIFactory = nullptr;
+	bool mUseBloomDown = true;
 };
