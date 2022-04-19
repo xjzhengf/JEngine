@@ -9,7 +9,7 @@ const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<IN
 	if (mPsoMap.find(PSOType)!=mPsoMap.end()) {
 		return mPsoMap[PSOType];
 	}
-	if (PSOType == "ToneMap") {
+	if ( PSOType == "Glitch") {
 		mPsoMap[PSOType]= BuildRenderFPSO(mInputLayout, shader);
 	}
 	if (PSOType == "ShadowMap") {
@@ -24,7 +24,7 @@ const PipelineState& FPSO::CreateFPSO(const std::string& PSOType, std::vector<IN
 	if (PSOType == "BloomDown") {
 		mPsoMap[PSOType] = BuildBloomDownFPSO(mInputLayout, shader);
 	}	
-	if (PSOType == "BloomUp" || PSOType == "SunMerge" || PSOType=="Glitch") {
+	if (PSOType == "BloomUp" || PSOType == "SunMerge" ||PSOType == "ToneMap"  ) {
 		mPsoMap[PSOType] = BuildBloomUpFPSO(mInputLayout, shader, PSOType);
 	}
 	return mPsoMap[PSOType];
@@ -68,7 +68,7 @@ PipelineState FPSO::BuildRenderFPSO(std::vector<INPUT_ELEMENT_DESC> mInputLayout
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	mPso.PSOName = "ToneMap";
+	mPso.PSOName = "Glitch";
 	mPso.dxPSO =psoDesc;
 	return mPso;
 #endif
