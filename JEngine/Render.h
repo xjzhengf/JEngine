@@ -14,7 +14,7 @@ public:
 	void PostProcessPass(int& index, const std::string& PSOName);
 	void HDRPass();
 	void BloomPass(int& postProcessCount);
-	void ToneMapPass(int RTVNumber);
+	void ToneMapPass(int RTVNumber, const std::string& PSOName);
 	void BuildLight(std::shared_ptr<FRenderScene> sceneResource);
 	void BuildRenderItemTrans(std::shared_ptr<FRenderScene> sceneResource);
 	~FRender();

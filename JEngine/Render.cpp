@@ -85,8 +85,8 @@ void FRender::SceneRender()
 	if (mUseBloomDown) {
 	BloomPass(postProcessCount);
 	}
-	PostProcessPass(postProcessCount, "Glitch");
-	ToneMapPass(postProcessCount);
+	PostProcessPass(postProcessCount, "ToneMap");
+	ToneMapPass(postProcessCount,"Glitch");
 
 	//RenderFrameEnd
 	mRHI->ExecuteCommandLists();
@@ -166,9 +166,9 @@ void FRender::HDRPass()
 }
 
 
-void FRender::ToneMapPass(int RTVNumber)
+void FRender::ToneMapPass(int RTVNumber, const std::string& PSOName)
 {
-	mRHI->BeginEvent("ToneMapPass");
+	mRHI->BeginEvent(PSOName);
 	mRHI->RSSetViewports(0.0f, 0.0f, (float)Engine::GetEngine()->GetWindow()->GetClientWidht(), (float)Engine::GetEngine()->GetWindow()->GetClientHeight(), 0.0f, 1.0f);
 	mRHI->RSSetScissorRects(0, 0, Engine::GetEngine()->GetWindow()->GetClientWidht(), Engine::GetEngine()->GetWindow()->GetClientHeight());
 
@@ -178,8 +178,8 @@ void FRender::ToneMapPass(int RTVNumber)
 		1, mRHIResource->CurrentBackBufferViewHand(), true, mRHIResource->CurrentDepthStencilViewHand());
 	//DrawMeshµÄ
 
-	mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"), MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").mPso, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap").GlobalShader);
-	mRHI->SetPipelineState(mRenderScene->HDRTriangle, MaterialManager::GetMaterialManager()->SearchMaterial("ToneMap"));
+	mRHI->ChangePSOState(MaterialManager::GetMaterialManager()->SearchMaterial(PSOName), MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).mPso, MaterialManager::GetMaterialManager()->SearchMaterial(PSOName).GlobalShader);
+	mRHI->SetPipelineState(mRenderScene->HDRTriangle, MaterialManager::GetMaterialManager()->SearchMaterial(PSOName));
 	mRHI->DrawMesh(mRenderScene->HDRTriangle, "HDRTriangle", false, true, RTVNumber, 1024, 768);
 	mRHI->ResourceBarrier(1, mRHIResource->BackBuffer(), RESOURCE_STATES::RENDER_TARGET, RESOURCE_STATES::PRESENT);
 	mRHI->EndEvent();
